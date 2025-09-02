@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tailwindcss -i src/input.css -o src/output.css --watch"
+    "dev": "tailwindcss -i dist/input.css -o dist/output.css --watch",
+    "format": "prettier --write ."
   },
   "keywords": [],
   "author": "",
@@ -12,6 +13,8 @@
   "type": "commonjs",
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.12",
+    "@tailwindcss/typography": "^0.5.16",
+    "prettier": "^3.6.2",
     "tailwindcss": "^4.1.12"
   }
 }
