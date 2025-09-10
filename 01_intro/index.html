@@ -23,19 +23,144 @@
     </header>
     <main class="mx-auto max-w-3xl px-6 py-10">
       <article class="prose prose-invert font-sans">
-        <h2>Week 1: Final Project Ideas</h2>
-        <p>Here are at most 3 ideas for my final project.</p>
+        <h2>Week 1: Final Project Brainstorm</h2>
+        <p>
+          Here are some ideas I'm thinking about for my final project. Since I'm quite comfortable
+          with coding, I think I could make the coolest thing in the shortest amount of time by
+          augmenting a piece of software into the real world. Or bridging real world data into code.
+        </p>
+        <p>
+          For example, I've been personally interested in using biometric data. Recently, I
+          experimented with some ideas I had for biofeedback devices to lower heart rate and
+          increase heart rate variability (HRV) with real-time data from my
+          <a href="https://www.whoop.com/" target="_blank" rel="noopener">Whoop</a> band. To do
+          this, I reverse engineered the Bluetooth Low Energy (BLE) protocol and wrote a simple
+          React Native/Expo app to read the data from the band. I'm still really interested in
+          continuing to experiment with this idea, and I want my PS70 project to be a continuation
+          of that curiosity.
+        </p>
 
-        <h4>EEG Headband for</h4>
-        <p>Description</p>
+        <h3>The Intelligent Pillow</h3>
+        <p>
+          After some research, I came across the idea of an
+          <a
+            href="https://www.researchgate.net/publication/264622988_Intelligent_Pillow_for_Heart_Rate_Monitor"
+            target="_blank"
+            rel="noopener"
+          >
+            intelligent pillow</a
+          >
+          — a pillow embedded with fiber-optic sensors capable of detecting heart rate
+          non-invasively while someone sleeps. This concept really captured my imagination.
+        </p>
 
-        <h4>[INSERT IDEA 2]</h4>
-        <p>Description</p>
+        <figure>
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/8/85/Fiber_optic_illuminated.jpg"
+            alt="Macro photo of fiber optic cable"
+            style="max-width: 100%; border-radius: 8px"
+          />
+          <figcaption>
+            Fiber optic cables can act as non-electrical sensors inside a pillow (Wikimedia
+            Commons).
+          </figcaption>
+        </figure>
 
-        <h4>[INSERT IDEA 3]</h4>
-        <p>Description</p>
+        <p>
+          The main reason I find this idea compelling is the <strong>use case</strong>. Unlike
+          wearable devices (wristbands, chest straps, rings), a pillow is
+          <em>already part of the sleep routine</em>. That means data can be collected passively
+          without extra effort from the user, which solves one of the biggest friction points in
+          biometric tracking: consistency.
+        </p>
 
-        Idea 3 Description
+        <h4>How It Works</h4>
+        <ul>
+          <li>A fiber-optic sensor (IR LED + photodiode) is embedded inside the pillow.</li>
+          <li>
+            The sensor detects tiny changes in reflected light as blood pulses through vessels — a
+            signal known as PPG (photoplethysmography).
+          </li>
+          <li>
+            A microcontroller filters and amplifies the signal, counts peaks, and calculates heart
+            rate.
+          </li>
+          <li>
+            Data could be displayed on an OLED screen or transmitted wirelessly to a phone or
+            computer.
+          </li>
+        </ul>
+
+        <figure>
+          <img
+            src="https://commons.wikimedia.org/wiki/Special:FilePath/Photoplethysmogram%20%28PPG%29%20pulse%20wave.svg"
+            alt="Diagram of a PPG pulse wave with systolic peak and dicrotic notch"
+            style="max-width: 100%; border-radius: 8px; background: #fff"
+          />
+          <figcaption>Representative PPG pulse wave (CC BY 4.0, Wikimedia Commons).</figcaption>
+        </figure>
+
+        <figure>
+          <img
+            src="https://commons.wikimedia.org/wiki/Special:FilePath/Photoplethysmogram%20signals%20at%20rest%20and%20during%20exercise.svg"
+            alt="Comparison of PPG signals at rest and during exercise"
+            style="max-width: 100%; border-radius: 8px; background: #fff"
+          />
+          <figcaption>
+            PPG changes with movement/physiology — useful context for sensor testing (CC BY 4.0,
+            Wikimedia Commons).
+          </figcaption>
+        </figure>
+
+        <h4>Why This Idea Fits PS70</h4>
+        <p>The project naturally touches all three technical pillars of the course:</p>
+        <ol>
+          <li>
+            <strong>3D Design &amp; Fabrication</strong> — I’ll prototype the pillow insert, sensor
+            housing, and possibly a bedside enclosure for the electronics.
+          </li>
+          <li>
+            <strong>Electronics (Input &amp; Output)</strong> — The IR LED + photodiode sensor,
+            filters, amplifiers, and microcontroller inputs/outputs (screen, LEDs, or Wi-Fi).
+          </li>
+          <li>
+            <strong>Microcontroller Programming</strong> — Arduino/ESP32 code to read signals,
+            filter noise, calculate BPM, and display/log the data.
+          </li>
+        </ol>
+
+        <h4>Future Extensions</h4>
+        <p>If the prototype works, there are many possible extensions such as:</p>
+        <ul>
+          <li><strong>Sleep staging</strong> by analyzing heart rate trends overnight.</li>
+          <li>Stream/log data wirelessly to an external application for visualization/analysis or data storage.</li>
+        </ul>
+        <hr />
+
+        <h3>Next Steps</h3>
+        <ol>
+          <li>
+            Prototype a <em>simplified PPG sensor</em> using an off-the-shelf MAX30102 module
+            (datasheet
+            <a
+              href="https://www.analog.com/media/en/technical-documentation/data-sheets/max30102.pdf"
+              target="_blank"
+              rel="noopener"
+              >here</a
+            >).
+          </li>
+          <li>
+            Test signal quality under different pillow materials (foam, fiberfill) and positions.
+          </li>
+          <li>
+            Design a <em>3D-printed casing</em> for the sensor and microcontroller with strain
+            relief for fibers/wires.
+          </li>
+          <li>
+            Implement Arduino code for peak detection and heart rate calculation; add OLED display
+            logging.
+          </li>
+        </ol>
       </article>
       <nav class="mt-12 flex justify-between text-sm text-neutral-400">
         <a class="hover:text-white" href="../index.html">Home</a>
