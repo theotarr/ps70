@@ -22,7 +22,98 @@
       </div>
     </header>
     <main class="mx-auto max-w-3xl px-6 py-10">
-      <article class="prose prose-invert font-sans">Nothing here yet...</article>
+      <article class="prose prose-invert font-sans">
+        <h1>Week 2 — 2D Design</h1>
+
+        <h2>Goals</h2>
+        <ul>
+          <li>Learn sketch constraints and dimensions</li>
+          <li>Practice extruding and shelling to create hollow parts (mugs)</li>
+          <li>Explore patterning and revolve for rounded features</li>
+          <li>Create a simple fan blade and hub, test boolean joins</li>
+        </ul>
+
+        <h2>Fan build — from sketch to frame and blades</h2>
+        <ol>
+          <li>
+            <strong>Sketch the outer frame</strong><br />
+            New sketch on the Top plane. Draw a 700 × 700 mm square centered on the
+            origin. Add four corner fillets: inner profile R50 mm and outer profile
+            R75 mm to get a rounded-square. Constrain
+            and fully dimension.
+          </li>
+          <li>
+            <strong>Make the frame body</strong><br />
+            Finish Sketch → Extrude the ring (select outer minus inner loop) to
+            ~20–25 mm. Add model Fillets (3–5 mm) to exterior and interior edges
+            to soften.
+          </li>
+          <li>
+            <strong>Sketch one blade</strong><br />
+            New sketch on the same plane. Draw a teardrop blade using tangent arcs
+            or a spline; dimension chord and width. Add a center construction
+            circle for the hub axis if needed.
+          </li>
+          <li>
+            <strong>Extrude and circular pattern</strong><br />
+            Extrude blade to 8–10 mm. Create a cylindrical hub, then use Circular
+            Pattern (Features) around the hub axis with 3 instances. Combine → Join
+            to merge or keep separate for edits.
+          </li>
+        </ol>
+        <p>
+          <em>Tips:</em> Keep blade curves tangent and symmetric. Use Shell on the
+          frame if you want a hollow section.
+        </p>
+
+        <div class="grid grid-cols-2 gap-4">
+          <a href="./fan-1.png"><img src="./fan-1.png" alt="Fan frame sketch with R50/R75" /></a>
+          <a href="./fan-2.png"><img src="./fan-2.png" alt="Fan frame and three blades" /></a>
+        </div>
+
+        <h2 class="mt-12">Mug build — revolve, shell, and handle</h2>
+        <ol>
+          <li>
+              <strong>Profile for revolve</strong><br />
+            Sketch half cross‑section on the Front plane with a vertical axis
+            centerline. Use Offset to define wall thickness. Add blended bottom
+            radii using two arcs. Fully constrain: height, rim OD, thickness, and
+            radii.
+          </li>
+          <li>
+            <strong>Revolve and shell</strong><br />
+            Revolve the profile around the centerline to create the solid. Apply
+            Shell from the top face to target 3–4 mm wall thickness.
+          </li>
+          <li>
+            <strong>Handle sketch and extrude</strong><br />
+            On a side plane, sketch a tapered handle strip with smooth arcs;
+            dimension width and clearance. Extrude as a new body so the ends
+            intersect the mug.
+          </li>
+          <li>
+            <strong>Join and refine</strong><br />
+            Combine → Join to attach handle. Add generous Fillets at the junction
+            (3–6 mm) and a small rim fillet for comfort.
+          </li>
+          <li>
+            <strong>Optional tweaks</strong><br />
+            Apply Draft for a slight taper and add Appearance for renderings.
+          </li>
+        </ol>
+
+        <p><strong>Printability notes:</strong> keep minimum wall ≥ 2.4–3.0 mm for a
+        0.4 mm nozzle; avoid unsupported overhangs &gt; 45° around the handle.
+        </p>
+
+        <div class="grid grid-cols-3 gap-4 mt-6">
+          <a href="./mug-1.jpg"><img src="./mug-1.jpg" alt="Mug after revolve and shell" /></a>
+          <a href="./mug-2.png"><img src="./mug-2.png" alt="Sketch offsets and bottom radii" /></a>
+          <a href="./mug-3.png"><img src="./mug-3.png" alt="Section showing thickness and draft" /></a>
+          <a href="./mug-4.png"><img src="./mug-4.png" alt="Handle sketch profile" /></a>
+          <a href="./mug-5.png"><img src="./mug-5.png" alt="Final mug with handle" /></a>
+        </div>
+      </article>
       <nav class="mt-12 flex justify-between text-sm text-neutral-400">
         <a class="hover:text-white" href="../01_intro/index.html">← Prev</a>
         <a class="hover:text-white" href="../03_fabrication/index.html">Next →</a>
