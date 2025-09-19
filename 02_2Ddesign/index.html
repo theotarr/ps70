@@ -11,6 +11,7 @@
       rel="stylesheet"
     />
     <link href="../dist/output.css" rel="stylesheet" />
+    <link rel="icon" href="../favicon.ico" />
   </head>
   <body
     class="antialiased bg-neutral-950 text-neutral-200 font-sans selection:bg-neutral-800 selection:text-white"
@@ -24,94 +25,141 @@
     <main class="mx-auto max-w-3xl px-6 py-10">
       <article class="prose prose-invert font-sans">
         <h1>Week 2 — 2D Design</h1>
-
-        <h2>Goals</h2>
-        <ul>
-          <li>Learn sketch constraints and dimensions</li>
-          <li>Practice extruding and shelling to create hollow parts (mugs)</li>
-          <li>Explore patterning and revolve for rounded features</li>
-          <li>Create a simple fan blade and hub, test boolean joins</li>
-        </ul>
-
-        <h2>Fan build — from sketch to frame and blades</h2>
+        <h2>Fan Model</h2>
         <ol>
           <li>
             <strong>Sketch the outer frame</strong><br />
-            New sketch on the Top plane. Draw a 700 × 700 mm square centered on the
-            origin. Add four corner fillets: inner profile R50 mm and outer profile
-            R75 mm to get a rounded-square. Constrain
-            and fully dimension.
+            New sketch on the Top plane. Draw a square centered on the origin. Add four corner
+            fillets and outer profile to get a rounded-square. Constrain and fully dimension.
           </li>
           <li>
             <strong>Make the frame body</strong><br />
-            Finish Sketch → Extrude the ring (select outer minus inner loop) to
-            ~20–25 mm. Add model Fillets (3–5 mm) to exterior and interior edges
-            to soften.
+            Finish Sketch → Extrude the ring (select outer minus inner loop). Add model Fillets to
+            exterior and interior edges to soften.
           </li>
           <li>
             <strong>Sketch one blade</strong><br />
-            New sketch on the same plane. Draw a teardrop blade using tangent arcs
-            or a spline; dimension chord and width. Add a center construction
-            circle for the hub axis if needed.
+            New sketch on the same plane. Draw a teardrop blade using tangent arcs or a spline;
+            dimension chord and width. Add a center construction circle for the hub axis if needed.
           </li>
           <li>
             <strong>Extrude and circular pattern</strong><br />
-            Extrude blade to 8–10 mm. Create a cylindrical hub, then use Circular
-            Pattern (Features) around the hub axis with 3 instances. Combine → Join
-            to merge or keep separate for edits.
+            Create a cylindrical hub, then use Circular Pattern (Features) around the hub axis with
+            3 instances. Combine → Join to merge or keep separate for edits.
           </li>
         </ol>
-        <p>
-          <em>Tips:</em> Keep blade curves tangent and symmetric. Use Shell on the
-          frame if you want a hollow section.
-        </p>
 
         <div class="grid grid-cols-2 gap-4">
           <a href="./fan-1.png"><img src="./fan-1.png" alt="Fan frame sketch with R50/R75" /></a>
           <a href="./fan-2.png"><img src="./fan-2.png" alt="Fan frame and three blades" /></a>
         </div>
 
-        <h2 class="mt-12">Mug build — revolve, shell, and handle</h2>
+        <h2 class="mt-12">Mug Model</h2>
         <ol>
           <li>
-              <strong>Profile for revolve</strong><br />
-            Sketch half cross‑section on the Front plane with a vertical axis
-            centerline. Use Offset to define wall thickness. Add blended bottom
-            radii using two arcs. Fully constrain: height, rim OD, thickness, and
-            radii.
+            <strong>Profile for revolve</strong><br />
+            Sketch half cross‑section on the Front plane with a vertical axis centerline. Use Offset
+            to define wall thickness. Add blended bottom radii using two arcs. Fully constrain:
+            height, rim OD, thickness, and radii.
           </li>
           <li>
             <strong>Revolve and shell</strong><br />
-            Revolve the profile around the centerline to create the solid. Apply
-            Shell from the top face to target 3–4 mm wall thickness.
+            Revolve the profile around the centerline to create the solid. Apply Shell from the top
+            face to target 3–4 mm wall thickness.
           </li>
           <li>
             <strong>Handle sketch and extrude</strong><br />
-            On a side plane, sketch a tapered handle strip with smooth arcs;
-            dimension width and clearance. Extrude as a new body so the ends
-            intersect the mug.
+            On a side plane, sketch a tapered handle strip with smooth arcs; dimension width and
+            clearance. Extrude as a new body so the ends intersect the mug.
           </li>
           <li>
             <strong>Join and refine</strong><br />
-            Combine → Join to attach handle. Add generous Fillets at the junction
-            (3–6 mm) and a small rim fillet for comfort.
-          </li>
-          <li>
-            <strong>Optional tweaks</strong><br />
-            Apply Draft for a slight taper and add Appearance for renderings.
+            Combine → Join to attach handle. Add generous Fillets at the junction and a small rim
+            fillet for comfort.
           </li>
         </ol>
-
-        <p><strong>Printability notes:</strong> keep minimum wall ≥ 2.4–3.0 mm for a
-        0.4 mm nozzle; avoid unsupported overhangs &gt; 45° around the handle.
-        </p>
 
         <div class="grid grid-cols-3 gap-4 mt-6">
           <a href="./mug-1.jpg"><img src="./mug-1.jpg" alt="Mug after revolve and shell" /></a>
           <a href="./mug-2.png"><img src="./mug-2.png" alt="Sketch offsets and bottom radii" /></a>
-          <a href="./mug-3.png"><img src="./mug-3.png" alt="Section showing thickness and draft" /></a>
+          <a href="./mug-3.png"
+            ><img src="./mug-3.png" alt="Section showing thickness and draft"
+          /></a>
           <a href="./mug-4.png"><img src="./mug-4.png" alt="Handle sketch profile" /></a>
           <a href="./mug-5.png"><img src="./mug-5.png" alt="Final mug with handle" /></a>
+        </div>
+
+        <h2 class="mt-12">Laser-cut finger‑jointed box</h2>
+        <p>
+          I designed an open‑top, finger‑jointed box in Fusion and fabricated it on the laser
+          cutter. I followed a tutorial with a parameter‑driven approach so the finger sizes update
+          when box dimensions or the number of fingers change. After exporting the faces, I laser
+          cut the parts and hot‑glued the notches. I also scored (and later hand‑scored) my initials
+          on the box.
+        </p>
+        ff
+        <h3>Parametric setup and feature patterning</h3>
+        <ol>
+          <li>
+            <strong>Define Parameters</strong> — length, width, height, material thickness (e.g.
+            3.175&nbsp;mm for 1/8"), and how many fingers along each edge (L/W/H). Compute finger
+            widths from those values so joints adapt as dimensions change.
+          </li>
+          <li>
+            <strong>Create the bottom panel</strong> — Sketch a rectangle (L×W) on the XY plane and
+            Extrude by the thickness.
+          </li>
+          <li>
+            <strong
+              >Cut one notch, then use Rectangular Pattern (Create → Pattern → Rectangular
+              Pattern)</strong
+            >
+            — On an edge, sketch a single finger rectangle constrained to the edges; Extrude Cut by
+            thickness to make one notch. Pattern the <em>feature</em> (not the sketch) along the
+            edge using the finger count and total spacing so the last finger lands correctly. Repeat
+            this strategy on the mating edges of adjacent panels.
+          </li>
+          <li>
+            <strong>Panels and joints</strong> — Extrude front/back/left/right panels as new bodies,
+            then use Modify → Combine (Cut, Keep Tools) to transfer matching notches between bodies.
+          </li>
+        </ol>
+
+        <div class="grid grid-cols-2 gap-4">
+          <a href="./box-pararms.png"
+            ><img
+              src="./box-pararms.png"
+              alt="Parameters for box dimensions, thickness, and finger counts"
+          /></a>
+          <a href="./box-fusion.png"
+            ><img src="./box-fusion.png" alt="Fusion 360 setup with patterned finger joints"
+          /></a>
+        </div>
+
+        <h3>Fabrication and assembly</h3>
+        <ul>
+          <li>
+            <strong>Laser cut</strong> the six faces from 1/8" stock using the exported profiles.
+          </li>
+          <li>
+            <strong>Assembly</strong> Hot‑glue along the finger joints; check for square while the
+            glue sets.
+          </li>
+          <li>
+            <strong>Marking</strong> Lightly <em>scored</em> my initials on the lid/side and later
+            deepened them by hand.
+          </li>
+        </ul>
+
+        <h3>Final result</h3>
+        <div class="grid grid-cols-3 gap-4 mt-6">
+          <a href="./box.jpeg"><img src="./box.jpeg" alt="Finished finger‑jointed box" /></a>
+          <a href="./box-top.jpeg"
+            ><img src="./box-top.jpeg" alt="Top view showing finger pattern and initials"
+          /></a>
+          <a href="./box-side.jpeg"
+            ><img src="./box-side.jpeg" alt="Side view of glued finger joints"
+          /></a>
         </div>
       </article>
       <nav class="mt-12 flex justify-between text-sm text-neutral-400">
