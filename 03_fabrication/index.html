@@ -23,7 +23,86 @@
       </div>
     </header>
     <main class="mx-auto max-w-3xl px-6 py-10">
-      <article class="prose prose-invert font-sans">Nothing here yet...</article>
+      <article class="prose prose-invert font-sans">
+        <h1>Week 3: Fabrication</h1>
+
+        <p>
+          For this week's fabrication assignment, I built a mechanical device to balance a marble on
+          the edge of a cam-driven platform. The goal was to create a stable yet dynamic setup using
+          laser-cut cardboard components for the main structure and hand-crafted elements for the
+          motor integration and cam mechanism.
+        </p>
+
+        <img
+          src="thumb.png"
+          alt="Completed marble balancing mechanism"
+          class="w-full h-auto rounded-lg shadow-lg mb-8"
+        />
+
+        <h2>Design and Laser Cutting</h2>
+
+        <p>
+          Building on the 2D design skills developed in
+          <a href="../02_2Ddesign/index.html">Week 2</a>, I used Fusion to model the base, track,
+          rails, and mounting piece for the track. These pieces were optimized for the laser
+          cutter's material constraints—using 3mm cardboard—to ensure precise fits for assembly
+          without additional fasteners.
+        </p>
+
+        <p>
+          The laser cutting process was straightforward: I exported the designs as .DXF files and
+          ran them through the cutter. This produced clean edges and interlocking joints, allowing
+          for a sturdy frame that could support the dynamic motion required for the marble
+          balancing.
+        </p>
+
+        <h2>Assembly</h2>
+
+        <p>
+          Once cut, assembly was easy. The base and rails slotted together seamlessly, forming the
+          core frame. I attached the track using the pre-designed mounting piece and tabs with hot
+          glue. This method was ideal for quick prototyping due to its ease of use and physical
+          flexibility, which was particularly helpful in accommodating the subtle motor movements
+          without rigid constraints. At this stage, the structure was rigid and ready for the
+          mechanical heart: the motor and cam system, which would be hand-crafted.
+        </p>
+
+        <h2>Iterating on Motor Mount and Cam Setup</h2>
+
+        <p>
+          The most challenging part was integrating the DC motor and crafting the cam to precisely
+          control the platform's tilt, ensuring the marble teeters on the very edge without falling.
+          Rather than relying solely on digital modeling for these irregular components, I used hand
+          tools like scissors and a razor for quick tests.
+        </p>
+
+        <p>
+          Each iteration focused on alignment: the motor needed to be positioned so its shaft drove
+          the cam without wobbling and pushed up the track enough that the marble wouldn't fall.
+          After about five prototypes, I settled on a design that used a simple bracket glued to the
+          frame, providing stable mounting.
+        </p>
+
+        <p>
+          For the cam itself, I experimented with different eccentric shapes. The key was achieving
+          a subtle oscillation—too much tilt and the marble rolls off; too little and it doesn't
+          balance dramatically. Through trial and error, attaching and detaching prototypes with
+          tape, I refined the cam until the marble hovered perfectly on the edge during the peak of
+          each rotation. This approach allowed for quick feedback loops that digital simulation
+          couldn't match at this scale.
+        </p>
+
+        <h2>Demo</h2>
+
+        <p>
+          Here's a short video demo of the mechanism in action, powered by the power test bench:
+        </p>
+
+        <video controls class="w-full h-auto rounded-lg shadow-lg mb-8">
+          <source src="demo.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </article>
       <nav class="mt-12 flex justify-between text-sm text-neutral-400">
         <a class="hover:text-white" href="../02_2Ddesign/index.html">← Prev</a>
         <a class="hover:text-white" href="../04_microcontroller/index.html">Next →</a>
