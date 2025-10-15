@@ -23,7 +23,109 @@
       </div>
     </header>
     <main class="mx-auto max-w-3xl px-6 py-10">
-      <article class="prose prose-invert font-sans">Nothing here yet...</article>
+      <article class="prose prose-invert font-sans">
+        <h1>Week 5 — 3D Design, Printing, and Scanning</h1>
+
+        <h2>Tesseract Design in Fusion</h2>
+        <p>
+          This week I made a tesseract (a 3D shadow of a 4-dimensional cube), ie. a cube inside of a
+          cube.
+        </p>
+
+        <h3>Design Screenshots from Fusion</h3>
+        <div class="grid grid-cols-2 gap-4 mt-6">
+          <a href="./3d-view.jpg">
+            <img src="./3d-view.jpg" alt="3D perspective view of tesseract design in Fusion" />
+          </a>
+          <a href="./face.jpg">
+            <img src="./face.jpg" alt="Front face view showing dimensional structure" />
+          </a>
+        </div>
+
+        <h3>Printing and Post-Processing</h3>
+        <ul>
+          <li>
+            <strong>Print run</strong> — About 45 minutes. Layers behaved, corners stayed down. I’ll
+            take the win.
+          </li>
+          <li>
+            <strong>Support cleanup</strong> — Minimal tree supports popped off with pliers. I love
+            when that happens.
+          </li>
+          <li>
+            <strong>Finishing pass</strong> — Light sanding on the touch points and a matte finish
+            to make the edges read cleanly.
+          </li>
+        </ul>
+
+        <h2 class="mt-12">Final Result</h2>
+        <p>
+          The print nails the nested-cube illusion—your eyes bounce between the frame and the inner
+          cube while the connectors quietly do the storytelling. It’s a small desk-sized reminder
+          that higher-dimensional stuff can look great on a humble FDM printer.
+        </p>
+
+        <div class="grid grid-cols-2 gap-4 mt-6">
+          <div>
+            <img src="./3d-view.jpg" alt="Final 3D printed tesseract - perspective view" />
+            <p class="text-sm text-neutral-400 mt-2">
+              Perspective view — where the “cube-in-cube” really pops
+            </p>
+          </div>
+          <div>
+            <img src="./face.jpg" alt="Final 3D printed tesseract - face view" />
+            <p class="text-sm text-neutral-400 mt-2">
+              Face view — clean lines, tidy joints, satisfied maker
+            </p>
+          </div>
+        </div>
+
+        <h2 class="mt-12">3D Model Viewers</h2>
+        <p>
+          Want to poke around the meshes yourself? Below are interactive viewers for the tesseract
+          and a scanned flipper model. Spin, zoom, and judge my fillets in real time.
+        </p>
+
+        <h3 class="mt-6">Tesseract 3D Model</h3>
+        <div class="aspect-video bg-black rounded-xl ring-1 ring-white/10 relative overflow-hidden">
+          <iframe
+            src="https://www.viewstl.com/?embedded&url=https%3A%2F%2Fgithub.com%2Ftheotarr%2Fps70%2Fraw%2Frefs%2Fheads%2Fmain%2F05_3Ddesign%2Ftesseract.stl&color=white&bgcolor=black&shading=smooth&clean=yes&noborder=yes"
+            allowfullscreen
+            style="border: 0; margin: 0; width: 100%; height: 100%; display: block"
+            loading="lazy"
+            title="Interactive 3D Tesseract Model"
+          ></iframe>
+        </div>
+
+        <h3 class="mt-6">Flipper 3D Model</h3>
+        <div class="aspect-video bg-black rounded-xl ring-1 ring-white/10 relative overflow-hidden">
+          <iframe
+            src="https://www.viewstl.com/?embedded&url=https%3A%2F%2Fgithub.com%2Ftheotarr%2Fps70%2Fraw%2Frefs%2Fheads%2Fmain%2F05_3Ddesign%2Fflipper.stl&color=white&bgcolor=black&shading=smooth&clean=yes&noborder=yes"
+            allowfullscreen
+            style="border: 0; margin: 0; width: 100%; height: 100%; display: block"
+            loading="lazy"
+            title="Interactive 3D Flipper Model"
+          ></iframe>
+        </div>
+
+        <h2 class="mt-12">3D Scanning: Flipper Zero</h2>
+        <p>
+          I scanned my Flipper Zero using the lab's 3D scanner. It took a few tries to get usable
+          results, since the device's reflective screen and infrared emitter made it tricky for the
+          scanner to pick up certain details cleanly.
+        </p>
+        <p>
+          To make the scanned mesh viewable in the online viewer (viewstl.com), I had to reduce the
+          size of the STL file below 30&nbsp;MiB. For that, I used the
+          <a
+            href="https://myminifactory.github.io/Fast-Quadric-Mesh-Simplification/"
+            target="_blank"
+            rel="noopener"
+            >Fast Quadric Mesh Simplification tool</a
+          >, which lets you quickly downscale STL/OBJ models in the browser
+          <sup>[source](https://myminifactory.github.io/Fast-Quadric-Mesh-Simplification/)</sup>.
+        </p>
+      </article>
       <nav class="mt-12 flex justify-between text-sm text-neutral-400">
         <a class="hover:text-white" href="../04_microcontroller/index.html">← Prev</a>
         <a class="hover:text-white" href="../06_inputs/index.html">Next →</a>
