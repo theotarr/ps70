@@ -11,6 +11,10 @@
       rel="stylesheet"
     />
     <link href="../dist/output.css" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css"
+    />
     <link rel="icon" href="../favicon.ico" />
   </head>
   <body
@@ -76,13 +80,53 @@
         <p>
           This print doesn't look quite right in the photo booth for some reason, but (I think) it
           nails the nested-cube illusion -- my eyes bounce between the frame and the inner cube.
-          It’s a small trinket that reminds me of my favoriate movies Interstellar and the Marvel
+          It’s a small trinket that reminds me of my favorite movies Interstellar and the Marvel
           movies.
         </p>
 
         <div class="mt-6">
           <img src="./3d-print.jpg" alt="Final 3D printed tesseract - perspective view" />
         </div>
+ 
+        <hr class="my-12" />
+
+        <h2>AirTag‑like Tracker — Enclosure Rev A</h2>
+        <p>
+          I’m designing a thin, coin‑cell powered BLE tracker enclosure sized for an nRF52‑based PCB
+          (or, for now, a small dev board). The goals are pocket comfort, keyring attachment, and
+          easy battery service, while keeping the shell printable without supports on common FDM
+          printers.
+        </p>
+
+        <h3>Constraints and targets</h3>
+        <ul>
+          <li>Approx. 34–36&nbsp;mm diameter (or 36×36&nbsp;mm rounded square), 7.5–8.5&nbsp;mm thick</li>
+          <li>Stackup: top shell → optional buzzer cavity → PCB (~1.6&nbsp;mm) → CR2032 holder → bottom shell</li>
+          <li>Attachment: 4&nbsp;mm slot for a split ring; generous fillets (≥1.5&nbsp;mm) for comfort</li>
+          <li>Retention: snap‑fits with ~0.3–0.4&nbsp;mm clearance; option for 2× M2 bosses</li>
+          <li>Serviceability: two‑piece clip with a small notch, or a bayonet battery door variant</li>
+        </ul>
+
+        <h3>Print settings</h3>
+        <ul>
+          <li>Material: PETG or ABS for toughness</li>
+          <li>Layer height: 0.2&nbsp;mm; 3 perimeters; 20–30% gyroid infill</li>
+          <li>Orient to hide the seam and reinforce the keyring area along perimeters</li>
+        </ul>
+
+        <h3>Iteration plan</h3>
+        <ul>
+          <li>Print a tolerance coupon: 0.8/1.0/1.2&nbsp;mm walls; 0.5–1.2&nbsp;mm snap tabs</li>
+          <li>Fit check with CR2032 holder and dev board; adjust standoffs and clearances</li>
+          <li>Rev&nbsp;B: refine snap geometry and add optional piezo sound port</li>
+        </ul>
+
+        <h3>Deliverables</h3>
+        <ul>
+          <li><code>cad/airtag-body.step</code> (master body)</li>
+          <li><code>cad/airtag-top.stl</code> and <code>cad/airtag-bottom.stl</code></li>
+          <li>Exploded view render: <code>cad/exploded.png</code></li>
+        </ul>
 
         <h2 class="mt-12">3D Model Viewers</h2>
         <p>
@@ -144,5 +188,14 @@
         <a class="hover:text-white" href="../06_inputs/index.html">Next →</a>
       </nav>
     </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        if (window.hljs) {
+          hljs.highlightAll();
+        }
+      });
+    </script>
   </body>
 </html>

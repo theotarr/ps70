@@ -11,7 +11,25 @@
       rel="stylesheet"
     />
     <link href="../dist/output.css" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css"
+    />
     <link rel="icon" href="../favicon.ico" />
+    <style>
+      .code-editor { border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); background: linear-gradient(180deg,#0b0b0b,#0a0a0a); overflow: hidden; }
+      .code-editor-header { display: flex; align-items: center; justify-content: space-between; height: 38px; padding: 0 12px; border-bottom: 1px solid rgba(255,255,255,0.06); background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0)); }
+      .code-editor-dots { display: flex; gap: 8px; align-items: center; }
+      .code-editor-dot { width: 10px; height: 10px; border-radius: 9999px; }
+      .code-editor-dot.red { background: #ff5f56; }
+      .code-editor-dot.yellow { background: #ffbd2e; }
+      .code-editor-dot.green { background: #27c93f; }
+      .code-editor-title { font-size: 12px; color: #a3a3a3; letter-spacing: 0.01em; }
+      .code-editor-actions button { font-size: 12px; color: #e5e7eb; background: #141414; border: 1px solid rgba(255,255,255,0.08); padding: 4px 8px; border-radius: 6px; cursor: pointer; }
+      .code-editor-actions button:hover { background: #191919; border-color: rgba(255,255,255,0.12); }
+      .code-editor-body { background: radial-gradient(1200px 200px at 0% 0%, rgba(255,255,255,0.03), transparent 40%), transparent; }
+      .code-editor-body pre { margin: 0; padding: 14px 16px; background: transparent; }
+    </style>
   </head>
   <body
     class="antialiased bg-neutral-950 text-neutral-200 font-sans selection:bg-neutral-800 selection:text-white"
@@ -23,11 +41,268 @@
       </div>
     </header>
     <main class="mx-auto max-w-3xl px-6 py-10">
-      <article class="prose prose-invert font-sans">Nothing here yet...</article>
+      <article class="prose prose-invert font-sans">
+        <h1>Week 4 — Microcontrollers: Servo Rail with Potentiometer</h1>
+        <p>
+          I iterated on my Week 3 mechanism by moving the rail up and down with a servo instead of a
+          motor controlled by a potentiometer for manual input. Turning the knob moves the rail
+          angle, which moves the ball smoothly along the track. The ESP32 reads the potentiometer,
+          applies a small smoothing filter, and maps the value to a safe servo range.
+        </p>
+
+        <h2>Demo</h2>
+        <div class="aspect-video bg-black rounded-xl ring-1 ring-white/10 relative overflow-hidden">
+          <iframe
+            src="https://drive.google.com/file/d/1jnBAZWxeBPzoVL4CqkYMuqgdXuYD0v_o/preview"
+            width="640"
+            height="480"
+            allow="autoplay"
+            style="border: 0; margin: 0; width: 100%; height: 100%; display: block"
+            loading="lazy"
+            title="Week 4 Demo — ESP32 Servo with Potentiometer"
+          ></iframe>
+        </div>
+
+        <h2 class="mt-12">Circuit Diagram</h2>
+        <p>
+          The microcontroller reads a potentiometer on <code>GPIO33</code> (ADC) and drives a servo from
+          <code>GPIO27</code>. Power the servo from an external 5&nbsp;V supply and tie grounds
+          together — do not power the servo from the microcontroller's <code>3V3</code> pin.
+        </p>
+        <figure>
+          <div class="rounded-xl ring-1 ring-white/10 bg-neutral-800/70 p-5">
+            <svg
+              viewBox="0 0 860 460"
+              width="100%"
+              style="max-width: 100%; height: auto; display: block"
+            >
+            <!-- ESP32 block -->
+            <rect x="40" y="60" width="220" height="260" rx="8" ry="8" fill="#181818" stroke="#8a8a8a" />
+            <text x="150" y="88" fill="#e5e5e5" font-size="14" text-anchor="middle" font-weight="600">
+              ESP32 Dev Board
+            </text>
+            <!-- ESP32 pins -->
+            <circle cx="60" cy="120" r="4" fill="#ddd" />
+            <text x="70" y="124" fill="#bbb" font-size="12">3V3</text>
+            <circle cx="60" cy="150" r="4" fill="#ddd" />
+            <text x="70" y="154" fill="#bbb" font-size="12">GND</text>
+            <circle cx="60" cy="180" r="4" fill="#ddd" />
+            <text x="70" y="184" fill="#bbb" font-size="12">GPIO33 (ADC)</text>
+            <circle cx="60" cy="210" r="4" fill="#ddd" />
+            <text x="70" y="214" fill="#bbb" font-size="12">GPIO27 (Servo)</text>
+
+            <!-- Potentiometer -->
+            <rect x="360" y="80" width="140" height="60" rx="8" ry="8" fill="#181818" stroke="#8a8a8a" />
+            <text x="430" y="105" fill="#e5e5e5" font-size="14" text-anchor="middle" font-weight="600">
+              Potentiometer
+            </text>
+            <!-- Pot pins (moved inside rect) -->
+            <circle cx="380" cy="120" r="4" fill="#ddd" />
+            <text x="388" y="124" fill="#bbb" font-size="12">3V3</text>
+            <circle cx="430" cy="120" r="4" fill="#ddd" />
+            <text x="438" y="124" fill="#bbb" font-size="12">Wiper</text>
+            <circle cx="480" cy="120" r="4" fill="#ddd" />
+            <text x="488" y="124" fill="#bbb" font-size="12">GND</text>
+
+            <!-- Servo -->
+            <rect x="650" y="220" width="140" height="80" rx="8" ry="8" fill="#181818" stroke="#8a8a8a" />
+            <text x="720" y="245" fill="#e5e5e5" font-size="14" text-anchor="middle" font-weight="600">Servo</text>
+            <circle cx="670" cy="260" r="4" fill="#ddd" />
+            <text x="678" y="264" fill="#bbb" font-size="12">Signal</text>
+            <circle cx="720" cy="260" r="4" fill="#ddd" />
+            <text x="728" y="264" fill="#bbb" font-size="12">+5V</text>
+            <circle cx="770" cy="260" r="4" fill="#ddd" />
+            <text x="760" y="264" fill="#bbb" font-size="12">GND</text>
+
+            <!-- 5V supply -->
+            <rect x="360" y="320" width="140" height="60" rx="8" ry="8" fill="#181818" stroke="#8a8a8a" />
+            <text x="430" y="345" fill="#e5e5e5" font-size="14" text-anchor="middle" font-weight="600">5V Supply</text>
+            <circle cx="380" cy="350" r="4" fill="#ddd" />
+            <text x="388" y="354" fill="#bbb" font-size="12">+5V</text>
+            <circle cx="480" cy="350" r="4" fill="#ddd" />
+            <text x="462" y="354" fill="#bbb" font-size="12">GND</text>
+
+            <!-- Wires: ESP32 to Pot -->
+            <line x1="60" y1="120" x2="380" y2="120" stroke="#6cf" stroke-width="2" stroke-opacity="0.5" />
+            <line x1="60" y1="150" x2="480" y2="120" stroke="#aaa" stroke-width="2" stroke-opacity="0.5" />
+            <line x1="60" y1="180" x2="430" y2="120" stroke="#6cf" stroke-width="2" stroke-opacity="0.5" />
+
+            <!-- Wires: ESP32 to Servo (signal) -->
+            <line x1="60" y1="210" x2="670" y2="260" stroke="#6cf" stroke-width="2" stroke-opacity="0.5" />
+
+            <!-- Wires: 5V supply to Servo power -->
+            <line x1="380" y1="350" x2="720" y2="260" stroke="#f66" stroke-width="2" stroke-opacity="0.45" />
+            <line x1="480" y1="350" x2="770" y2="260" stroke="#aaa" stroke-width="2" stroke-opacity="0.45" />
+
+            <!-- Common ground hint: ESP32 GND to 5V GND (dotted) -->
+            <line
+              x1="60"
+              y1="150"
+              x2="480"
+              y2="350"
+              stroke="#aaa"
+              stroke-width="2"
+              stroke-dasharray="6 6"
+              stroke-opacity="0.45"
+            />
+            </svg>
+          </div>
+          <figcaption class="text-sm text-neutral-400 mt-2">
+            Block diagram: ESP32 reads the potentiometer (3V3–GND, wiper → GPIO33) and drives the
+            servo signal (GPIO27). Servo power is from an external 5&nbsp;V supply. Grounds must be
+            shared.
+          </figcaption>
+        </figure>
+
+        <h3>Wiring Notes</h3>
+        <ul>
+          <li>
+            <strong>Potentiometer</strong>: 3V3 → pot end, GND → other end, wiper →
+            <code>GPIO33</code>.
+          </li>
+          <li>
+            <strong>What is the wiper?</strong> It's the center pin of the potentiometer. As you turn
+            the knob, the wiper moves along a resistive track, outputting a voltage between 0&nbsp;V
+            (GND) and 3.3&nbsp;V (3V3) — perfect for an ESP32 analog input.
+          </li>
+          <li>
+            <strong>Servo</strong>: Signal → <code>GPIO27</code>; +5&nbsp;V → external 5&nbsp;V; GND
+            → common ground.
+          </li>
+          <li>
+            <strong>Power</strong>: Do <em>not</em> power the servo from ESP32 3V3. Use a stable
+            5&nbsp;V source (USB 5&nbsp;V/VIN on the dev board or an external 5&nbsp;V supply) and
+            tie grounds together.
+          </li>
+          <li>
+            <strong>Stability</strong>: A 100–470&nbsp;µF cap across servo +5&nbsp;V and GND can
+            reduce brownouts.
+          </li>
+          <li>
+            <strong>Safety</strong>: ESP32 GPIOs are 3.3&nbsp;V only — never feed 5&nbsp;V into
+            <code>GPIO33</code>. The pot must be powered from 3V3.
+          </li>
+          <li>
+            <strong>If you only have 5&nbsp;V available</strong>: Power the servo from the board's
+            USB 5&nbsp;V/VIN. The potentiometer still needs 3V3 (use the dev board's 3V3 pin). If
+            you truly cannot access 3V3, add a resistor divider on the wiper to
+            <code>GPIO33</code> so the ADC sees ≤3.3&nbsp;V (e.g., ~20&nbsp;kΩ from wiper to ADC and
+            ~33&nbsp;kΩ from ADC to GND).
+          </li>
+        </ul>
+
+        <h2 class="mt-12">Code</h2>
+        <p>Arduino sketch running on ESP32 (uses <code>ESP32Servo</code>):</p>
+        <div class="code-editor">
+          <div class="code-editor-header">
+            <div class="code-editor-dots">
+              <span class="code-editor-dot red"></span>
+              <span class="code-editor-dot yellow"></span>
+              <span class="code-editor-dot green"></span>
+            </div>
+            <div class="code-editor-title">ESP32Servo.ino</div>
+            <div class="code-editor-actions">
+              <button type="button" class="code-editor-copy" data-copy="#week4-code">Copy</button>
+            </div>
+          </div>
+          <div class="code-editor-body">
+            <pre><code id="week4-code" class="language-cpp">#include &lt;ESP32Servo.h&gt;
+
+Servo myservo;
+
+int potPin = 33;     // potentiometer input pin
+int servoPin = 27;   // servo signal pin
+float smoothedVal = 0;  // smoothed analog value
+float alpha = 0.1;      // smoothing factor (0.0–1.0). Lower = smoother, less sensitive.
+
+void setup() {
+  Serial.begin(9600);
+  myservo.attach(servoPin);
+  smoothedVal = analogRead(potPin);  // initialize smoothing filter
+  Serial.println("ESP32 Servo with Smoothed Potentiometer Control");
+}
+
+void loop() {
+  int rawVal = analogRead(potPin);  // read potentiometer (0–4095)
+  
+  // Exponential moving average filter
+  smoothedVal = alpha * rawVal + (1 - alpha) * smoothedVal;
+
+  // Map the smoothed value to servo range (can reduce range for finer control)
+  int servoPos = map(smoothedVal, 0, 4095, 30, 150);  // narrower range = less sensitive
+
+  myservo.write(servoPos);
+
+  Serial.printf("Raw: %4d | Smoothed: %4.1f | Servo: %3d°\n", rawVal, smoothedVal, servoPos);
+
+  delay(15);
+}</code></pre>
+          </div>
+        </div>
+
+        <h2 class="mt-12">Build &amp; Tuning Notes</h2>
+        <ul>
+          <li>
+            Arduino IDE: install <code>ESP32</code> board support and the
+            <code>ESP32Servo</code> library.
+          </li>
+          <li>Select your board (e.g., “ESP32 Dev Module”/ESP32‑S3) and the correct USB Port.</li>
+          <li>
+            Open Serial Monitor at <code>9600</code> baud to see raw/smoothed readings and the servo
+            angle.
+          </li>
+          <li>
+            Tune <code>alpha</code>: lower values smooth more but feel less responsive; higher =
+            snappier.
+          </li>
+          <li>
+            Adjust the mapped range (e.g., <code>30–150°</code>) to avoid mechanical limits or
+            reduce sensitivity.
+          </li>
+          <li>If motion is reversed, swap the pot’s 3V3 and GND leads, or invert the map.</li>
+          <li>Ensure servo power is a stable 5&nbsp;V with a shared ground to the ESP32.</li>
+        </ul>
+      </article>
       <nav class="mt-12 flex justify-between text-sm text-neutral-400">
         <a class="hover:text-white" href="../03_fabrication/index.html">← Prev</a>
         <a class="hover:text-white" href="../05_3Ddesign/index.html">Next →</a>
       </nav>
     </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        if (window.hljs) {
+          hljs.highlightAll();
+        }
+
+        var copyButtons = document.querySelectorAll('.code-editor-copy');
+        copyButtons.forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var targetSelector = btn.getAttribute('data-copy');
+            var codeEl = document.querySelector(targetSelector);
+            if (!codeEl) return;
+            var text = codeEl.innerText;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(text).then(function () {
+                var original = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(function () { btn.textContent = original; }, 1200);
+              });
+            } else {
+              var textarea = document.createElement('textarea');
+              textarea.value = text;
+              document.body.appendChild(textarea);
+              textarea.select();
+              try { document.execCommand('copy'); } catch (e) {}
+              document.body.removeChild(textarea);
+              var original = btn.textContent;
+              btn.textContent = 'Copied!';
+              setTimeout(function () { btn.textContent = original; }, 1200);
+            }
+          });
+        });
+      });
+    </script>
   </body>
 </html>
