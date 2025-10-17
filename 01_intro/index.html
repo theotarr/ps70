@@ -11,6 +11,10 @@
       rel="stylesheet"
     />
     <link href="../dist/output.css" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css"
+    />
     <link rel="icon" href="../favicon.ico" />
   </head>
   <body
@@ -41,7 +45,7 @@
           of that curiosity.
         </p>
 
-        <h3>The Intelligent Pillow</h3>
+        <h3>Idea 1: The Intelligent Pillow</h3>
         <p>
           After some research, I came across the idea of an
           <a
@@ -173,11 +177,100 @@
             logging.
           </li>
         </ol>
+
+        <hr />
+
+        <h3>Idea 2: AirTag‑like Tracker</h3>
+        <p>
+          I’m building my own “AirTag”-like tracker that leverages existing crowdsourced networks,
+          starting with Apple’s Find My via OpenHaystack. I’ll ship a quick MVP on a Flipper Zero,
+          validate custom BLE advertising on an ESP32 prototype, then design a coin‑cell, ultra‑low
+          power BLE tag I can 3D print an enclosure for and carry on a keychain.
+        </p>
+
+        <h4>Why this is interesting</h4>
+        <ul>
+          <li>Real‑world, privacy‑sensitive wireless systems (BLE, network relays, encryption).</li>
+          <li>Bridges multiple course pillars: electronics, embedded firmware, 3D design.</li>
+          <li>Clear success criteria: sightings on a map and multi‑day battery life.</li>
+        </ul>
+
+        <h4>System overview</h4>
+        <ul>
+          <li>Device advertises encrypted BLE payloads from rotating public keys.</li>
+          <li>Nearby iOS devices upload sightings to Apple’s servers.</li>
+          <li>I fetch and decrypt reports locally to visualize locations.</li>
+        </ul>
+
+        <h4>Execution plan (stages)</h4>
+        <ol>
+          <li>
+            <strong>Flipper Zero MVP</strong> — Use the FindMyFlipper app to generate keys, import a
+            <code>.keys</code> file, broadcast, and retrieve location reports. Tune beacon interval
+            and TX power, then run a campus walk to validate.
+          </li>
+          <li>
+            <strong>ESP32 prototype</strong> — Build custom firmware that emits OpenHaystack‑style
+            advertisements and rotates keys. Provide a serial CLI to inject keys and tweak params.
+            Validate the end‑to‑end pipeline on iOS.
+          </li>
+          <li>
+            <strong>Custom coin‑cell tag (nRF52)</strong> — Port the logic to an ultra‑low‑power
+            MCU (nRF52), add deep sleep and optional motion‑gated advertising, and design a thin
+            snap‑fit enclosure with a keyring slot.
+          </li>
+        </ol>
+
+        <h4>Initial BOM (Rev&nbsp;A, indicative)</h4>
+        <ul>
+          <li>Flipper MVP: Flipper Zero + SD card (existing).</li>
+          <li>ESP32 prototype: ESP32‑DevKitC or ESP32‑S3 board; USB power/LiPo.</li>
+          <li>Custom tag: Raytac MDBT42Q (nRF52832) or MDBT50Q (nRF52840), CR2032 holder (Keystone 3034), slide switch, LIS3DH (optional), 0603 passives, 2‑layer PCB, 3D printed enclosure.</li>
+        </ul>
+
+        <h4>Risks &amp; mitigations</h4>
+        <ul>
+          <li>
+            <strong>Platform changes</strong>: Keep key generation/report tooling modular (Anisette
+            server; OpenHaystack‑style keys) so I can swap tools if needed.
+          </li>
+          <li>
+            <strong>Battery life</strong>: Choose nRF52 for low power; add motion‑gated advertising;
+            measure current early and often.
+          </li>
+          <li>
+            <strong>Ethics/compliance</strong>: Use my own generated keys (no cloning), label the
+            device, and include an owner‑alert chirp option.
+          </li>
+        </ul>
+
+        <h4>References</h4>
+        <p>
+          I’m using the excellent FindMyFlipper project to bootstrap the MVP, including key
+          generation and report retrieval:
+          <a href="https://github.com/MatthewKuKanich/FindMyFlipper" target="_blank" rel="noopener">github.com/MatthewKuKanich/FindMyFlipper</a>.
+        </p>
+
+        <h4>Next steps</h4>
+        <ol>
+          <li>Install FindMyFlipper and generate/import keys on the Flipper Zero.</li>
+          <li>Run first field test and map sightings; collect battery impact notes.</li>
+          <li>Start ESP32 advertising prototype with key rotation and a serial CLI.</li>
+        </ol>
       </article>
       <nav class="mt-12 flex justify-between text-sm text-neutral-400">
         <a class="hover:text-white" href="../index.html">Home</a>
         <a class="hover:text-white" href="../02_2Ddesign/index.html">Next →</a>
       </nav>
     </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        if (window.hljs) {
+          hljs.highlightAll();
+        }
+      });
+    </script>
   </body>
 </html>
