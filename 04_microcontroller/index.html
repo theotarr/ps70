@@ -17,20 +17,73 @@
     />
     <link rel="icon" href="../favicon.ico" />
     <style>
-      .code-editor { border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); background: linear-gradient(180deg,#0b0b0b,#0a0a0a); overflow: hidden; }
-      .code-editor-header { display: flex; align-items: center; justify-content: space-between; height: 38px; padding: 0 12px; border-bottom: 1px solid rgba(255,255,255,0.06); background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0)); }
-      .code-editor-dots { display: flex; gap: 8px; align-items: center; }
-      .code-editor-dot { width: 10px; height: 10px; border-radius: 9999px; }
-      .code-editor-dot.red { background: #ff5f56; }
-      .code-editor-dot.yellow { background: #ffbd2e; }
-      .code-editor-dot.green { background: #27c93f; }
-      .code-editor-title { font-size: 12px; color: #a3a3a3; letter-spacing: 0.01em; }
-      .code-editor-actions button { font-size: 12px; color: #e5e7eb; background: #141414; border: 1px solid rgba(255,255,255,0.08); padding: 4px 8px; border-radius: 6px; cursor: pointer; }
-      .code-editor-actions button:hover { background: #191919; border-color: rgba(255,255,255,0.12); }
-      .code-editor-body { background: radial-gradient(1200px 200px at 0% 0%, rgba(255,255,255,0.03), transparent 40%), transparent; }
-      .code-editor-body pre { margin: 0; padding: 14px 16px; background: transparent; }
+      .code-editor {
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: linear-gradient(180deg, #0b0b0b, #0a0a0a);
+        overflow: hidden;
+      }
+      .code-editor-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 38px;
+        padding: 0 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0));
+      }
+      .code-editor-dots {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .code-editor-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 9999px;
+      }
+      .code-editor-dot.red {
+        background: #ff5f56;
+      }
+      .code-editor-dot.yellow {
+        background: #ffbd2e;
+      }
+      .code-editor-dot.green {
+        background: #27c93f;
+      }
+      .code-editor-title {
+        font-size: 12px;
+        color: #a3a3a3;
+        letter-spacing: 0.01em;
+      }
+      .code-editor-actions button {
+        font-size: 12px;
+        color: #e5e7eb;
+        background: #141414;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 4px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .code-editor-actions button:hover {
+        background: #191919;
+        border-color: rgba(255, 255, 255, 0.12);
+      }
+      .code-editor-body {
+        background:
+          radial-gradient(1200px 200px at 0% 0%, rgba(255, 255, 255, 0.03), transparent 40%),
+          transparent;
+      }
+      .code-editor-body pre {
+        margin: 0;
+        padding: 14px 16px;
+        background: transparent;
+      }
       /* Remove background from highlight.js theme */
-      .hljs, pre code.hljs { background: transparent !important; }
+      .hljs,
+      pre code.hljs {
+        background: transparent !important;
+      }
     </style>
   </head>
   <body
@@ -53,22 +106,20 @@
         </p>
 
         <h2>Demo</h2>
-        <div class="aspect-video bg-black rounded-xl ring-1 ring-white/10 relative overflow-hidden">
-          <iframe
-            src="https://drive.google.com/file/d/1jnBAZWxeBPzoVL4CqkYMuqgdXuYD0v_o/preview"
-            width="640"
-            height="480"
-            allow="autoplay"
-            style="border: 0; margin: 0; width: 100%; height: 100%; display: block"
-            loading="lazy"
-            title="Week 4 Demo — ESP32 Servo with Potentiometer"
-          ></iframe>
-        </div>
+        <iframe
+          src="https://drive.google.com/file/d/1jnBAZWxeBPzoVL4CqkYMuqgdXuYD0v_o/preview"
+          width="100%"
+          allow="autoplay"
+          class="w-full rounded-lg shadow-lg mb-8"
+          style="aspect-ratio: 9/16; max-width: 100%"
+          loading="lazy"
+          title="Week 4 Demo — Servo with Potentiometer"
+        ></iframe>
 
         <h2 class="mt-12">Circuit Diagram</h2>
         <p>
-          The microcontroller reads a potentiometer on <code>GPIO33</code> (ADC) and drives a servo from
-          <code>GPIO27</code>. Power the servo from an external 5&nbsp;V supply and tie grounds
+          The microcontroller reads a potentiometer on <code>GPIO33</code> (ADC) and drives a servo
+          from <code>GPIO27</code>. Power the servo from an external 5&nbsp;V supply and tie grounds
           together — do not power the servo from the microcontroller's <code>3V3</code> pin.
         </p>
         <figure>
@@ -78,75 +129,191 @@
               width="100%"
               style="max-width: 100%; height: auto; display: block"
             >
-            <!-- ESP32 block -->
-            <rect x="40" y="60" width="220" height="260" rx="8" ry="8" fill="#181818" stroke="#8a8a8a" />
-            <text x="150" y="88" fill="#e5e5e5" font-size="14" text-anchor="middle" font-weight="600">
-              ESP32 Dev Board
-            </text>
-            <!-- ESP32 pins -->
-            <circle cx="60" cy="120" r="4" fill="#ddd" />
-            <text x="70" y="124" fill="#bbb" font-size="12">3V3</text>
-            <circle cx="60" cy="150" r="4" fill="#ddd" />
-            <text x="70" y="154" fill="#bbb" font-size="12">GND</text>
-            <circle cx="60" cy="180" r="4" fill="#ddd" />
-            <text x="70" y="184" fill="#bbb" font-size="12">GPIO33 (ADC)</text>
-            <circle cx="60" cy="210" r="4" fill="#ddd" />
-            <text x="70" y="214" fill="#bbb" font-size="12">GPIO27 (Servo)</text>
+              <!-- ESP32 block -->
+              <rect
+                x="40"
+                y="60"
+                width="220"
+                height="260"
+                rx="8"
+                ry="8"
+                fill="#181818"
+                stroke="#8a8a8a"
+              />
+              <text
+                x="150"
+                y="88"
+                fill="#e5e5e5"
+                font-size="14"
+                text-anchor="middle"
+                font-weight="600"
+              >
+                ESP32 Dev Board
+              </text>
+              <!-- ESP32 pins -->
+              <circle cx="60" cy="120" r="4" fill="#ddd" />
+              <text x="70" y="124" fill="#bbb" font-size="12">3V3</text>
+              <circle cx="60" cy="150" r="4" fill="#ddd" />
+              <text x="70" y="154" fill="#bbb" font-size="12">GND</text>
+              <circle cx="60" cy="180" r="4" fill="#ddd" />
+              <text x="70" y="184" fill="#bbb" font-size="12">GPIO33 (ADC)</text>
+              <circle cx="60" cy="210" r="4" fill="#ddd" />
+              <text x="70" y="214" fill="#bbb" font-size="12">GPIO27 (Servo)</text>
 
-            <!-- Potentiometer -->
-            <rect x="360" y="80" width="140" height="60" rx="8" ry="8" fill="#181818" stroke="#8a8a8a" />
-            <text x="430" y="105" fill="#e5e5e5" font-size="14" text-anchor="middle" font-weight="600">
-              Potentiometer
-            </text>
-            <!-- Pot pins (moved inside rect) -->
-            <circle cx="380" cy="120" r="4" fill="#ddd" />
-            <text x="388" y="124" fill="#bbb" font-size="12">3V3</text>
-            <circle cx="430" cy="120" r="4" fill="#ddd" />
-            <text x="438" y="124" fill="#bbb" font-size="12">Wiper</text>
-            <circle cx="480" cy="120" r="4" fill="#ddd" />
-            <text x="488" y="124" fill="#bbb" font-size="12">GND</text>
+              <!-- Potentiometer -->
+              <rect
+                x="360"
+                y="80"
+                width="140"
+                height="60"
+                rx="8"
+                ry="8"
+                fill="#181818"
+                stroke="#8a8a8a"
+              />
+              <text
+                x="430"
+                y="105"
+                fill="#e5e5e5"
+                font-size="14"
+                text-anchor="middle"
+                font-weight="600"
+              >
+                Potentiometer
+              </text>
+              <!-- Pot pins (moved inside rect) -->
+              <circle cx="380" cy="120" r="4" fill="#ddd" />
+              <text x="388" y="124" fill="#bbb" font-size="12">3V3</text>
+              <circle cx="430" cy="120" r="4" fill="#ddd" />
+              <text x="438" y="124" fill="#bbb" font-size="12">Wiper</text>
+              <circle cx="480" cy="120" r="4" fill="#ddd" />
+              <text x="488" y="124" fill="#bbb" font-size="12">GND</text>
 
-            <!-- Servo -->
-            <rect x="650" y="220" width="140" height="80" rx="8" ry="8" fill="#181818" stroke="#8a8a8a" />
-            <text x="720" y="245" fill="#e5e5e5" font-size="14" text-anchor="middle" font-weight="600">Servo</text>
-            <circle cx="670" cy="260" r="4" fill="#ddd" />
-            <text x="678" y="264" fill="#bbb" font-size="12">Signal</text>
-            <circle cx="720" cy="260" r="4" fill="#ddd" />
-            <text x="728" y="264" fill="#bbb" font-size="12">+5V</text>
-            <circle cx="770" cy="260" r="4" fill="#ddd" />
-            <text x="760" y="264" fill="#bbb" font-size="12">GND</text>
+              <!-- Servo -->
+              <rect
+                x="650"
+                y="220"
+                width="140"
+                height="80"
+                rx="8"
+                ry="8"
+                fill="#181818"
+                stroke="#8a8a8a"
+              />
+              <text
+                x="720"
+                y="245"
+                fill="#e5e5e5"
+                font-size="14"
+                text-anchor="middle"
+                font-weight="600"
+              >
+                Servo
+              </text>
+              <circle cx="670" cy="260" r="4" fill="#ddd" />
+              <text x="678" y="264" fill="#bbb" font-size="12">Signal</text>
+              <circle cx="720" cy="260" r="4" fill="#ddd" />
+              <text x="728" y="264" fill="#bbb" font-size="12">+5V</text>
+              <circle cx="770" cy="260" r="4" fill="#ddd" />
+              <text x="760" y="264" fill="#bbb" font-size="12">GND</text>
 
-            <!-- 5V supply -->
-            <rect x="360" y="320" width="140" height="60" rx="8" ry="8" fill="#181818" stroke="#8a8a8a" />
-            <text x="430" y="345" fill="#e5e5e5" font-size="14" text-anchor="middle" font-weight="600">5V Supply</text>
-            <circle cx="380" cy="350" r="4" fill="#ddd" />
-            <text x="388" y="354" fill="#bbb" font-size="12">+5V</text>
-            <circle cx="480" cy="350" r="4" fill="#ddd" />
-            <text x="462" y="354" fill="#bbb" font-size="12">GND</text>
+              <!-- 5V supply -->
+              <rect
+                x="360"
+                y="320"
+                width="140"
+                height="60"
+                rx="8"
+                ry="8"
+                fill="#181818"
+                stroke="#8a8a8a"
+              />
+              <text
+                x="430"
+                y="345"
+                fill="#e5e5e5"
+                font-size="14"
+                text-anchor="middle"
+                font-weight="600"
+              >
+                5V Supply
+              </text>
+              <circle cx="380" cy="350" r="4" fill="#ddd" />
+              <text x="388" y="354" fill="#bbb" font-size="12">+5V</text>
+              <circle cx="480" cy="350" r="4" fill="#ddd" />
+              <text x="462" y="354" fill="#bbb" font-size="12">GND</text>
 
-            <!-- Wires: ESP32 to Pot -->
-            <line x1="60" y1="120" x2="380" y2="120" stroke="#6cf" stroke-width="2" stroke-opacity="0.5" />
-            <line x1="60" y1="150" x2="480" y2="120" stroke="#aaa" stroke-width="2" stroke-opacity="0.5" />
-            <line x1="60" y1="180" x2="430" y2="120" stroke="#6cf" stroke-width="2" stroke-opacity="0.5" />
+              <!-- Wires: ESP32 to Pot -->
+              <line
+                x1="60"
+                y1="120"
+                x2="380"
+                y2="120"
+                stroke="#6cf"
+                stroke-width="2"
+                stroke-opacity="0.5"
+              />
+              <line
+                x1="60"
+                y1="150"
+                x2="480"
+                y2="120"
+                stroke="#aaa"
+                stroke-width="2"
+                stroke-opacity="0.5"
+              />
+              <line
+                x1="60"
+                y1="180"
+                x2="430"
+                y2="120"
+                stroke="#6cf"
+                stroke-width="2"
+                stroke-opacity="0.5"
+              />
 
-            <!-- Wires: ESP32 to Servo (signal) -->
-            <line x1="60" y1="210" x2="670" y2="260" stroke="#6cf" stroke-width="2" stroke-opacity="0.5" />
+              <!-- Wires: ESP32 to Servo (signal) -->
+              <line
+                x1="60"
+                y1="210"
+                x2="670"
+                y2="260"
+                stroke="#6cf"
+                stroke-width="2"
+                stroke-opacity="0.5"
+              />
 
-            <!-- Wires: 5V supply to Servo power -->
-            <line x1="380" y1="350" x2="720" y2="260" stroke="#f66" stroke-width="2" stroke-opacity="0.45" />
-            <line x1="480" y1="350" x2="770" y2="260" stroke="#aaa" stroke-width="2" stroke-opacity="0.45" />
+              <!-- Wires: 5V supply to Servo power -->
+              <line
+                x1="380"
+                y1="350"
+                x2="720"
+                y2="260"
+                stroke="#f66"
+                stroke-width="2"
+                stroke-opacity="0.45"
+              />
+              <line
+                x1="480"
+                y1="350"
+                x2="770"
+                y2="260"
+                stroke="#aaa"
+                stroke-width="2"
+                stroke-opacity="0.45"
+              />
 
-            <!-- Common ground hint: ESP32 GND to 5V GND (dotted) -->
-            <line
-              x1="60"
-              y1="150"
-              x2="480"
-              y2="350"
-              stroke="#aaa"
-              stroke-width="2"
-              stroke-dasharray="6 6"
-              stroke-opacity="0.45"
-            />
+              <!-- Common ground hint: ESP32 GND to 5V GND (dotted) -->
+              <line
+                x1="60"
+                y1="150"
+                x2="480"
+                y2="350"
+                stroke="#aaa"
+                stroke-width="2"
+                stroke-dasharray="6 6"
+                stroke-opacity="0.45"
+              />
             </svg>
           </div>
           <figcaption class="text-sm text-neutral-400 mt-2">
@@ -163,9 +330,9 @@
             <code>GPIO33</code>.
           </li>
           <li>
-            <strong>What is the wiper?</strong> It's the center pin of the potentiometer. As you turn
-            the knob, the wiper moves along a resistive track, outputting a voltage between 0&nbsp;V
-            (GND) and 3.3&nbsp;V (3V3) — perfect for an ESP32 analog input.
+            <strong>What is the wiper?</strong> It's the center pin of the potentiometer. As you
+            turn the knob, the wiper moves along a resistive track, outputting a voltage between
+            0&nbsp;V (GND) and 3.3&nbsp;V (3V3) — perfect for an ESP32 analog input.
           </li>
           <li>
             <strong>Servo</strong>: Signal → <code>GPIO27</code>; +5&nbsp;V → external 5&nbsp;V; GND
@@ -273,34 +440,40 @@ void loop() {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
     <script>
-      document.addEventListener('DOMContentLoaded', function () {
+      document.addEventListener("DOMContentLoaded", function () {
         if (window.hljs) {
           hljs.highlightAll();
         }
 
-        var copyButtons = document.querySelectorAll('.code-editor-copy');
+        var copyButtons = document.querySelectorAll(".code-editor-copy");
         copyButtons.forEach(function (btn) {
-          btn.addEventListener('click', function () {
-            var targetSelector = btn.getAttribute('data-copy');
+          btn.addEventListener("click", function () {
+            var targetSelector = btn.getAttribute("data-copy");
             var codeEl = document.querySelector(targetSelector);
             if (!codeEl) return;
             var text = codeEl.innerText;
             if (navigator.clipboard && navigator.clipboard.writeText) {
               navigator.clipboard.writeText(text).then(function () {
                 var original = btn.textContent;
-                btn.textContent = 'Copied!';
-                setTimeout(function () { btn.textContent = original; }, 1200);
+                btn.textContent = "Copied!";
+                setTimeout(function () {
+                  btn.textContent = original;
+                }, 1200);
               });
             } else {
-              var textarea = document.createElement('textarea');
+              var textarea = document.createElement("textarea");
               textarea.value = text;
               document.body.appendChild(textarea);
               textarea.select();
-              try { document.execCommand('copy'); } catch (e) {}
+              try {
+                document.execCommand("copy");
+              } catch (e) {}
               document.body.removeChild(textarea);
               var original = btn.textContent;
-              btn.textContent = 'Copied!';
-              setTimeout(function () { btn.textContent = original; }, 1200);
+              btn.textContent = "Copied!";
+              setTimeout(function () {
+                btn.textContent = original;
+              }, 1200);
             }
           });
         });
