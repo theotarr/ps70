@@ -209,9 +209,6 @@
   .mx-auto {
     margin-inline: auto;
   }
-  .my-12 {
-    margin-block: calc(var(--spacing) * 12);
-  }
   .prose {
     color: var(--tw-prose-body);
     max-width: 65ch;
@@ -957,6 +954,24 @@
     border-radius: 0.5rem !important;
   }
   .prose video {
+    border-radius: 0.5rem !important;
+  }
+  .prose-invert img {
+    border-radius: 0.5rem !important;
+  }
+  .prose-invert iframe {
+    border-radius: 0.5rem !important;
+  }
+  .prose-invert video {
+    border-radius: 0.5rem !important;
+  }
+  :where(img):not(:where([class~="not-prose"],[class~="not-prose"] *)) {
+    border-radius: 0.5rem !important;
+  }
+  :where(video):not(:where([class~="not-prose"],[class~="not-prose"] *)) {
+    border-radius: 0.5rem !important;
+  }
+  :where(iframe):not(:where([class~="not-prose"],[class~="not-prose"] *)) {
     border-radius: 0.5rem !important;
   }
 }
