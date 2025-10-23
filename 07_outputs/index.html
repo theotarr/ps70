@@ -53,8 +53,6 @@
           <li>Some recent iPhones, iPads, or Macs nearby to act as location relays</li>
         </ul>
 
-        <hr class="my-12" />
-
         <h2>Step 1 — Let's Start with the Flipper Zero</h2>
         <p>
           I always like to start with the quickest way to see results: get a working payload broadcasting and make sure nearby Apple devices are picking it up and sending reports. The plan is simple - generate some crypto keys, get that 31-byte Apple payload on the air, and see if the location reports start coming in.
@@ -133,8 +131,6 @@ def generate_mac_and_payload(public_key):
           </div>
         </div>
 
-        <hr class="my-12" />
-
         <h2>Step 2 — Let's Make It Portable with ESP32</h2>
         <p>
           Now that we've got it working on the Flipper, let's move that same payload over to an ESP32 so it can run standalone and sip just a few milliamps of power. The Arduino sketch sends out the exact same Offline Finding broadcast using only your advertisement key. No fancy GATT server needed - just a straightforward advertiser that runs cleanly with good timing and proper state management.
@@ -210,8 +206,6 @@ constexpr uint8_t BLE_ADV_OFFLINE_FINDING_LENGTH = 0x19;</code></pre>
         </ol>
         <p class="mt-4 text-sm text-neutral-400">Pro tip: If you're using really fast advertising intervals, the app might miss some packets. A 1-second interval makes it much easier to see everything clearly.</p>
 
-        <hr class="my-12" />
-
         <h2>Quick Break — 3D Printing an ESP32 Case</h2>
         <p>
           I whipped up a simple two-piece PLA case that holds an ESP32 dev board. No battery compartment yet, but it works great as a basic enclosure. You can attach it to a keyring, just make sure to keep the antenna area clear and avoid putting it near metal objects.
@@ -255,8 +249,6 @@ constexpr uint8_t BLE_ADV_OFFLINE_FINDING_LENGTH = 0x19;</code></pre>
             title="Interactive 3D — ESP32 Cover"
           ></iframe>
         </div>
-
-        <hr class="my-12" />
 
         <h2>Step 3 — Building a Web Dashboard to See Your Locations</h2>
         <p>
@@ -380,8 +372,6 @@ pip install -r requirements.txt</code></pre>
           </div>
         </div>
 
-        <hr class="my-12" />
-
         <h2>Understanding How Apple's Find My Network Actually Works</h2>
         <h3>The Bluetooth packet structure we're using</h3>
         <ul>
@@ -427,8 +417,6 @@ pip install -r requirements.txt</code></pre>
           <li><strong>BLE scanner doesn't show a device name:</strong> That's totally normal! Just check that you can see the Manufacturer Data (0x004C) and that the payload is 31 bytes long.</li>
           <li><strong>Web service authentication failing:</strong> Make sure your anisette headers and authentication are working properly - check the server logs for specific error messages.</li>
         </ul>
-
-        <hr class="my-12" />
 
         <h2>Appendix — File Structure</h2>
         <ul>
