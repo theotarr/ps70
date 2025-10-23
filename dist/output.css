@@ -368,12 +368,6 @@
     :where(img):not(:where([class~="not-prose"],[class~="not-prose"] *)) {
       margin-top: 2em;
       margin-bottom: 2em;
-      border-radius: var(--radius-lg);
-    }
-    :where(iframe):not(:where([class~="not-prose"],[class~="not-prose"] *)) {
-      margin-top: 2em;
-      margin-bottom: 2em;
-      border-radius: var(--radius-lg);
     }
     :where(picture):not(:where([class~="not-prose"],[class~="not-prose"] *)) {
       display: block;
@@ -383,7 +377,6 @@
     :where(video):not(:where([class~="not-prose"],[class~="not-prose"] *)) {
       margin-top: 2em;
       margin-bottom: 2em;
-      border-radius: var(--radius-lg);
     }
     :where(kbd):not(:where([class~="not-prose"],[class~="not-prose"] *)) {
       font-weight: 500;
@@ -840,6 +833,9 @@
   }
   .text-white {
     color: var(--color-white);
+  }
+  .italic {
+    font-style: italic;
   }
   .underline {
     text-decoration-line: underline;

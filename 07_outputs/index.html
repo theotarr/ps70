@@ -31,54 +31,53 @@
       <article class="prose prose-invert font-sans">
         <h1>Week 7 — Outputs: Find My BLE broadcasts on Flipper + ESP32</h1>
 
-        <h2>Architecture at a Glance</h2>
+        <h2>Here's How It All Works</h2>
         <div class="mt-4 space-y-4">
           <a href="./architecture.png">
             <img src="./architecture.png" alt="Project data flow diagram for Find My broadcasts, relays, and retrieval web service" />
           </a>
         </div>
-        <p class="mt-4">High‑level path:</p>
+        <p class="mt-4">So here's the basic flow:</p>
         <ul>
-          <li>Device (Flipper/ESP32) advertises a 31‑byte Apple Manufacturer Specific payload embedding a 28‑byte EC public key X‑coordinate.</li>
-          <li>Nearby Apple devices upload encrypted reports to Apple.</li>
-          <li>The web service queries by hashed advertisement key and decrypts them with your private key.</li>
+          <li>Your device (Flipper or ESP32) sends out a special 31-byte Apple payload that includes part of your public key</li>
+          <li>Any nearby iPhones, iPads, or Macs pick this up and anonymously send encrypted location reports to Apple</li>
+          <li>Your web service asks Apple for reports matching your key, then decrypts them to show locations</li>
         </ul>
 
-        <h3 class="mt-10">What you’ll need</h3>
+        <h3 class="mt-10">What you'll need</h3>
         <ul>
-          <li>macOS, Linux, or Windows</li>
-          <li>Python 3.9+ for the web service (a venv is recommended)</li>
-          <li>Flipper Zero (optional for Part 1)</li>
-          <li>ESP32 DevKit (classic ESP32, e.g. ESP32‑WROOM) for Part 2</li>
-          <li>Recent iPhone/iPad/Mac devices nearby to relay Find My reports</li>
+          <li>A computer running macOS, Linux, or Windows</li>
+          <li>Python 3.9+ for the web service (I'd recommend using a virtual environment)</li>
+          <li>A Flipper Zero (optional, but makes Part 1 way easier)</li>
+          <li>An ESP32 DevKit (classic ESP32 like the ESP32-WROOM) for Part 2</li>
+          <li>Some recent iPhones, iPads, or Macs nearby to act as location relays</li>
         </ul>
 
         <hr class="my-12" />
 
-        <h2>Step 1 — Proving it on a Flipper Zero</h2>
+        <h2>Step 1 — Let's Start with the Flipper Zero</h2>
         <p>
-          Start with the fastest feedback loop: broadcast a known‑good payload and confirm nearby Apple devices begin relaying encrypted reports. The goal is to
-          generate a valid keypair, get a 31‑byte Apple Manufacturer payload on‑air, and verify relays.
+          I always like to start with the quickest way to see results: get a working payload broadcasting and make sure nearby Apple devices are picking it up and sending reports. The plan is simple - generate some crypto keys, get that 31-byte Apple payload on the air, and see if the location reports start coming in.
         </p>
 
-        <h3>1) Generate keys</h3>
-        <p>I generated a SECP224R1 keypair using the project’s generator. It outputs a <code>.keys</code> file with the private key, the 28‑byte advertisement key (public X), its SHA‑256 hash (Base64), and a prebuilt payload for quick validation. This keeps the radio tests fast before committing to firmware.</p>
-        <p>The script writes a <code>.keys</code> file under <code>AirTagGeneration/keys/</code> that includes:</p>
+        <h3>1) Generate your keys</h3>
+        <p>I used the project's key generator to create a SECP224R1 keypair. It spits out a <code>.keys</code> file with everything you need: your private key, the 28-byte advertisement key (that's the public X coordinate), a SHA-256 hash of it in Base64, and even a ready-to-use payload. This way you can test the radio stuff quickly without getting bogged down in firmware details right away.</p>
+        <p>The script creates a <code>.keys</code> file in <code>AirTagGeneration/keys/</code> that contains:</p>
         <ul>
-          <li>Private key (Base64 and Hex)</li>
-          <li>Advertisement key/public key (Base64 and Hex)</li>
-          <li>Hashed advertisement key (Base64 of SHA‑256)</li>
-          <li>Derived MAC and full payload (Hex)</li>
+          <li>Your private key (in both Base64 and hex formats)</li>
+          <li>The advertisement key/public key (also in Base64 and hex)</li>
+          <li>A hashed version of the advertisement key (Base64 of the SHA-256)</li>
+          <li>The derived MAC address and complete payload (in hex)</li>
         </ul>
 
-        <h3>2) Load keys onto the Flipper</h3>
+        <h3>2) Get those keys on your Flipper</h3>
         <ul>
-          <li>Copy the <code>.keys</code> file to <code>Apps_Data/FindMyFlipper</code> on the device, or manually input the MAC and Payload in the FindMy app on the Flipper.</li>
+          <li>Just copy that <code>.keys</code> file over to <code>Apps_Data/FindMyFlipper</code> on your Flipper, or if you prefer, manually type in the MAC and Payload values using the FindMy app on the device.</li>
         </ul>
 
-        <h3>3) Start advertising</h3>
+        <h3>3) Start broadcasting</h3>
         <ul>
-          <li>Launch the FindMy app on the Flipper and select the tag. Confirm it’s advertising. Nearby Apple devices will pick up the broadcast and relay encrypted reports to Apple.</li>
+          <li>Fire up the FindMy app on your Flipper and pick the tag you want to use. Make sure it's actually advertising (you should see some indication that it's working). Once that's going, any nearby Apple devices will catch the signal and start sending encrypted location reports to Apple.</li>
         </ul>
 
         <div class="grid grid-cols-2 gap-4 mt-6">
@@ -90,10 +89,10 @@
           </a>
         </div>
 
-        <h3 class="mt-8">Validation tips</h3>
+        <h3 class="mt-8">Quick validation checks</h3>
         <ul>
-          <li>Scan with a BLE scanner to see Apple Manufacturer data present (Company ID 0x004C) and a 31‑byte payload.</li>
-          <li>The device may not appear as a named peripheral; it is a broadcaster with static‑random addressing.</li>
+          <li>Use a BLE scanner app to confirm you can see the Apple Manufacturer data (look for Company ID 0x004C) and that 31-byte payload.</li>
+          <li>Don't expect to see a friendly device name - this thing is just broadcasting, not acting like a normal Bluetooth device. It uses a static random address, so it'll look a bit mysterious.</li>
         </ul>
 
         <h3>Key generation core (Python)</h3>
@@ -136,15 +135,14 @@ def generate_mac_and_payload(public_key):
 
         <hr class="my-12" />
 
-        <h2>Step 2 — Making it portable on ESP32 (Arduino IDE/CLI)</h2>
+        <h2>Step 2 — Let's Make It Portable with ESP32</h2>
         <p>
-          Port the validated payload to ESP32 so it runs standalone on a few milliamps. The sketch emits the same Offline Finding advertisement using only the
-          advertisement key. No GATT server — just a clean advertiser loop with sane timing, controller state checks, and a configurable status byte.
+          Now that we've got it working on the Flipper, let's move that same payload over to an ESP32 so it can run standalone and sip just a few milliamps of power. The Arduino sketch sends out the exact same Offline Finding broadcast using only your advertisement key. No fancy GATT server needed - just a straightforward advertiser that runs cleanly with good timing and proper state management.
         </p>
 
-        <h3>Files and constant to set</h3>
+        <h3>What you need to configure</h3>
         <ul>
-          <li>Set the advertisement key constant to your 28‑byte public key (Hex, 56 characters):</li>
+          <li>You'll need to set the advertisement key constant to your 28-byte public key (that's 56 hex characters):</li>
         </ul>
         <div class="code-editor">
           <div class="code-editor-header">
@@ -160,11 +158,8 @@ def generate_mac_and_payload(public_key):
           </div>
           <div class="code-editor-body">
             <pre><code id="week7-code2" class="language-cpp">// In ESP32FindMyFlipper/ESP32FindMyFlipper.ino
+// Generated from `generate_keys.py`
 const char* FINDMY_ADV_KEY_HEX = "&lt;YOUR_56_HEX_CHARS_ADVERTISEMENT_KEY&gt;";
-
-// Replace this with the advertisement key value from your generated .keys file.
-const char* FINDMY_ADV_KEY_HEX =
-  "35C5D533D083299A67112BA04FA47D92165497630A5372945F863145";
 
 // BLE specification constants
 constexpr uint16_t BLE_COMPANY_ID_APPLE = 0x004C;
@@ -174,67 +169,69 @@ constexpr uint8_t BLE_ADV_OFFLINE_FINDING_LENGTH = 0x19;</code></pre>
           </div>
         </div>
 
-        <h3>Build and upload</h3>
-        <p>I installed the ESP32 core, selected the DevKit board/port, set <code>FINDMY_ADV_KEY_HEX</code>, and uploaded the sketch. During bring‑up I kept logs at 115200&nbsp;baud and used a ~1s advertising interval to make over‑the‑air inspection easy. Controller state checks ensure GAP setup happens only after the controller is enabled to avoid INIT/IDLE races.</p>
+        <h3>Getting it on your ESP32</h3>
+        <p>
+          To keep things simple while testing, I watched the serial monitor at 115200 baud and set the advertising interval to 1 second—this made it easy to track broadcasts in real time. The code is designed to wait until the Bluetooth controller is fully ready before starting setup, which helps prevent those pesky INIT/IDLE state errors.
+        </p>
 
-        <h3>Notes</h3>
+        <h3>A few things to know</h3>
         <ul>
-          <li>The sketch initializes the BLE controller, assembles the 31‑byte payload, and advertises with a default 1s interval.</li>
-          <li>A battery/status byte can be adjusted in code to hint device status in the frame.</li>
-          <li>The address is static‑random, derived from the advertisement key top bytes.</li>
+          <li>The sketch fires up the BLE controller, builds that 31-byte payload, and starts advertising every second by default</li>
+          <li>You can tweak the battery/status byte in the code to give hints about the device's state in the broadcast</li>
+          <li>The MAC address is derived from your advertisement key but uses the static random format (so it starts with those C0 bits)</li>
         </ul>
 
-        <h3>Troubleshooting</h3>
+        <h3>If things go wrong</h3>
         <ul>
-          <li>If logs show the BLE controller stuck in INIT/IDLE, power cycle the board and retry; confirm the ESP32 core is up‑to‑date.</li>
-          <li>Ensure the advertisement key is exactly 56 hex chars; any mismatch will produce an invalid frame.</li>
+          <li>If you see the BLE controller getting stuck in INIT/IDLE states in the logs, just power cycle the board and try again. Also double-check that your ESP32 board support is up to date.</li>
+          <li>Make sure your advertisement key is exactly 56 hex characters - if it's off by even one character, you'll get an invalid broadcast frame.</li>
         </ul>
 
-        <h3 class="mt-8">Verify with nRF Connect (iOS)</h3>
+        <h3 class="mt-8">Verify it's working with nRF Connect (iOS)</h3>
         <ol>
-          <li>Open nRF Connect → Scanner. Ensure Bluetooth is on and stay close to the device.</li>
-          <li>Tap the filter icon and enable “Manufacturer Specific Data”. Optionally filter by Company ID 0x004C (Apple) if supported.</li>
-          <li>Find an entry with no/unknown name that repeatedly appears with a static‑random address (starts with C0../randomized). Tap it.</li>
-          <li>Inspect the Advertising Data:
+          <li>Open up nRF Connect and go to the Scanner tab. Make sure Bluetooth is on and get close to your ESP32.</li>
+          <li>Hit the filter icon and turn on "Manufacturer Specific Data". If you can filter by Company ID 0x004C (that's Apple), go for it.</li>
+          <li>Look for a device that doesn't have a friendly name and keeps showing up with a static random address (it'll start with C0 or show as randomized). That's probably your device - tap on it.</li>
+          <li>Check the Advertising Data section:
             <ul>
-              <li>Manufacturer Specific Data present</li>
-              <li>Company Identifier: 0x004C (Apple)</li>
-              <li>Payload length total: 31 bytes</li>
-              <li>Look for type 0x12 and length 0x19 inside the Apple block</li>
-              <li>Extract the 22 bytes that correspond to <code>adv_key[6:28]</code> and the hint byte (top 2 bits of <code>adv_key[0]</code>)</li>
+              <li>You should see Manufacturer Specific Data present</li>
+              <li>Company Identifier should be 0x004C (Apple)</li>
+              <li>Total payload length should be 31 bytes</li>
+              <li>Look for type 0x12 and length 0x19 inside the Apple data block</li>
+              <li>The 22 bytes in there should match <code>adv_key[6:28]</code> from your keys, plus the hint byte (top 2 bits of <code>adv_key[0]</code>)</li>
             </ul>
           </li>
-          <li>Cross‑check against your <code>.keys</code> file:
+          <li>Double-check against your <code>.keys</code> file:
             <ul>
-              <li>The “Payload” hex should match the generator output</li>
-              <li>The address will be static‑random and not equal to the adv key bytes</li>
+              <li>The "Payload" hex should match exactly what the generator created</li>
+              <li>The MAC address will be static random (not the same as your adv key bytes)</li>
             </ul>
           </li>
         </ol>
-        <p class="mt-4 text-sm text-neutral-400">Tip: Very fast intervals can cause packet loss in app views; a 1s interval is easy to inspect.</p>
+        <p class="mt-4 text-sm text-neutral-400">Pro tip: If you're using really fast advertising intervals, the app might miss some packets. A 1-second interval makes it much easier to see everything clearly.</p>
 
         <hr class="my-12" />
 
-        <h2>Interlude — 3D printing a simple ESP32 “AirTag‑like” shell</h2>
+        <h2>Quick Break — 3D Printing an ESP32 Case</h2>
         <p>
-          A two‑part PLA shell with standoffs for an ESP32 dev board; no battery yet. Toss it on a keyring, keep the antenna area unobstructed, and avoid metal.
+          I whipped up a simple two-piece PLA case that holds an ESP32 dev board. No battery compartment yet, but it works great as a basic enclosure. You can attach it to a keyring, just make sure to keep the antenna area clear and avoid putting it near metal objects.
         </p>
-        <h3>Design notes</h3>
+        <h3>What I designed</h3>
         <ul>
-          <li>Dimensions: sized for a typical ESP32‑WROOM devkit (add 1–2&nbsp;mm tolerance).</li>
-          <li>Wall thickness: 1.6–2.0&nbsp;mm; infill 15% is fine.</li>
-          <li>Standoffs: 2.5–3.0&nbsp;mm posts to clear the solder joints; M2 self‑tapping screws.</li>
-          <li>Keyring: 4–5&nbsp;mm hole reinforced with an extra rib.</li>
+          <li>Dimensions are sized for a standard ESP32-WROOM devkit (I added 1-2mm clearance just to be safe)</li>
+          <li>Wall thickness is 1.6-2.0mm with 15% infill - that's plenty strong enough</li>
+          <li>2.5-3.0mm standoffs to keep it clear of the solder joints, designed for M2 self-tapping screws</li>
+          <li>4-5mm keyring hole with some reinforcement ribs so it doesn't break</li>
         </ul>
-        <h3>Assembly</h3>
+        <h3>Putting it together</h3>
         <ul>
-          <li>Print two halves, press fit the ESP32 inside without screws or other mounting methods.</li>
-          <li>Route the USB‑C/Micro‑USB out a notch.</li>
+          <li>Just print both halves and press-fit your ESP32 inside - no screws or anything fancy needed</li>
+          <li>Make sure the USB-C or Micro-USB port lines up with the notch I designed</li>
         </ul>
-        <h3>Files</h3>
+        <h3>Download the files</h3>
         <ul>
-          <li>Carrier: <a href="./esp32-wroom-32d_carrier.stl" download>esp32-wroom-32d_carrier.stl</a></li>
-          <li>Cover: <a href="./esp32-wroom-32d_cover.stl" download>esp32-wroom-32d_cover.stl</a></li>
+          <li>Bottom carrier: <a href="./esp32-wroom-32d_carrier.stl" download>esp32-wroom-32d_carrier.stl</a></li>
+          <li>Top cover: <a href="./esp32-wroom-32d_cover.stl" download>esp32-wroom-32d_cover.stl</a></li>
         </ul>
 
         <h3 class="mt-8">ESP32 Carrier</h3>
@@ -261,12 +258,11 @@ constexpr uint8_t BLE_ADV_OFFLINE_FINDING_LENGTH = 0x19;</code></pre>
 
         <hr class="my-12" />
 
-        <h2>Step 3 — A tiny web gateway to the Find My cloud (FastAPI)</h2>
+        <h2>Step 3 — Building a Web Dashboard to See Your Locations</h2>
         <p>
-          Broadcasts are only half the story — seeing dots on a map closes the loop. This FastAPI app authenticates, queries by hashed advertisement keys,
-          decrypts reports with your private keys, and renders them with a lightweight UI and server‑sent events.
+          Getting your device to broadcast is cool, but the real magic happens when you can actually see those location dots on a map! This FastAPI web app handles all the authentication with Apple, queries for reports using your hashed keys, decrypts them with your private keys, and shows everything in a nice web interface with live updates.
         </p>
-        <h3>Setup</h3>
+        <h3>Getting set up</h3>
         <div class="code-editor">
           <div class="code-editor-header">
             <div class="code-editor-dots">
@@ -286,11 +282,11 @@ source venv/bin/activate
 pip install -r requirements.txt</code></pre>
           </div>
         </div>
-        <h4>Authentication</h4>
+        <h4>Authentication setup</h4>
         <ul>
-          <li>The service calls <code>request_reports.getAuth()</code> which expects valid Apple account context (anisette headers and token). Provide <code>keys/auth.json</code> or environment variables as required by your setup.</li>
+          <li>The service uses <code>request_reports.getAuth()</code> which needs valid Apple account credentials (those special anisette headers and tokens). You'll need to provide either a <code>keys/auth.json</code> file or set up environment variables depending on how you want to authenticate.</li>
         </ul>
-        <h3>Run the server</h3>
+        <h3>Starting the server</h3>
         <div class="code-editor">
           <div class="code-editor-header">
             <div class="code-editor-dots">
@@ -307,14 +303,14 @@ pip install -r requirements.txt</code></pre>
             <pre><code id="week7-code4" class="language-bash">uvicorn web_service:app --reload</code></pre>
           </div>
         </div>
-        <p>Open the UI at <code>http://localhost:8000</code>.</p>
-        <h4>Data storage</h4>
+        <p>Once it's running, open your browser and go to <code>http://localhost:8000</code> to see the interface.</p>
+        <h4>Where it stores data</h4>
         <ul>
-          <li>SQLite at <code>AirTagGeneration/keys/reports.db</code> (created automatically). A <code>tags</code> table stores metadata (private key, hashed adv key, optional MQTT settings).</li>
+          <li>Everything goes into a local SQLite database at <code>AirTagGeneration/keys/reports.db</code> (it creates this automatically). The <code>tags</code> table keeps track of all your device info like private keys, hashed advertisement keys, and any MQTT settings you might want.</li>
         </ul>
-        <h4>Real‑time updates</h4>
+        <h4>Live updates</h4>
         <ul>
-          <li>The app broadcasts updates via server‑sent events so the UI refreshes as reports arrive.</li>
+          <li>The web app sends live updates using server-sent events, so your map refreshes automatically whenever new location reports come in.</li>
         </ul>
 
         <div class="mt-6">
@@ -322,6 +318,7 @@ pip install -r requirements.txt</code></pre>
             <img src="./map-tags.jpeg" alt="Map UI showing decrypted tag locations" />
           </a>
         </div>
+        <p class="mt-2 text-sm text-neutral-400 italic">* Fun fact: that's actually me hanging out in my dorm (Lionel) in the yard while testing this whole location tracking thing.</p>
         <div class="mt-6">
           <a href="./manage-tags.jpeg">
             <img src="./manage-tags.jpeg" alt="Manage tags UI to add private key and hashed advertisement key" />
@@ -334,15 +331,15 @@ pip install -r requirements.txt</code></pre>
           </a>
         </div>
 
-        <h3 class="mt-8">FindMy Gateway API</h3>
-        <p>The web app exposes a small HTTP API to manage tags and retrieve reports, and an event stream for live updates. Authentication to Apple’s endpoints uses anisette headers and a valid account context; locally, the app stores only your private keys and decrypted reports.</p>
+        <h3 class="mt-8">The API Endpoints</h3>
+        <p>The web dashboard also gives you a simple HTTP API for managing your devices and getting location data, plus a live event stream for real-time updates. When it talks to Apple's servers, it uses those special authentication headers and tokens, but locally it only keeps your private keys and the decrypted location reports.</p>
         <ul>
-          <li><code>GET /api/tags</code>: list configured tags (hashed advertisement key, metadata)</li>
-          <li><code>POST /api/tags</code>: add/update a tag with private key and hashed adv key</li>
-          <li><code>GET /api/reports?hash=&lt;base64_sha256_adv_key&gt;</code>: fetch decrypted reports</li>
-          <li><code>GET /events</code>: Server‑Sent Events stream for live location updates</li>
+          <li><code>GET /api/tags</code>: see all your configured devices (shows hashed keys and other metadata)</li>
+          <li><code>POST /api/tags</code>: add a new device or update an existing one with its private key and hashed advertisement key</li>
+          <li><code>GET /api/reports?hash=&lt;base64_sha256_adv_key&gt;</code>: get the decrypted location reports for a specific device</li>
+          <li><code>GET /events</code>: live event stream that pushes location updates as they arrive</li>
         </ul>
-        <p><strong>Extensibility.</strong> The gateway isolates the Apple client from storage and transport. You can swap the Apple client with a mock for tests, push updates to MQTT/Webhooks, or add per‑tag scopes. This structure makes a 3rd‑party “Find My”‑style service feasible without changing the on‑air BLE format.</p>
+        <p><strong>The cool part about the architecture:</strong> I designed this so the Apple communication is completely separate from data storage and transport. You could easily swap in a mock Apple client for testing, send updates to MQTT or webhooks, or add different permission levels per device. This setup makes it totally possible to build your own "Find My"-style service without ever touching the Bluetooth broadcast format.</p>
 
         <h3 class="mt-8">Snippet: FastAPI event broadcaster (Python)</h3>
         <div class="code-editor">
@@ -385,87 +382,87 @@ pip install -r requirements.txt</code></pre>
 
         <hr class="my-12" />
 
-        <h2>How Apple’s Offline Finding makes this possible</h2>
-        <h3>BLE Advertisement Structure (as used here)</h3>
+        <h2>Understanding How Apple's Find My Network Actually Works</h2>
+        <h3>The Bluetooth packet structure we're using</h3>
         <ul>
-          <li>Advertising type: Manufacturer Specific Data (AD type 0xFF)</li>
-          <li>Company ID: Apple (0x004C)</li>
-          <li>Offline Finding frame type: 0x12</li>
-          <li>Length for Offline Finding portion: 0x19</li>
-          <li>Total payload size: 31 bytes</li>
+          <li>It's sent as Manufacturer Specific Data (that's Bluetooth advertising type 0xFF)</li>
+          <li>Company ID is set to Apple (0x004C)</li>
+          <li>Uses Apple's special "Offline Finding" frame type (0x12)</li>
+          <li>The Offline Finding part is 0x19 (25) bytes long</li>
+          <li>Total payload comes out to exactly 31 bytes</li>
         </ul>
-        <h4>Embedding the 28‑byte advertisement key (SECP224R1 public X coordinate)</h4>
+        <h4>How we hide the 28-byte advertisement key in there</h4>
         <ul>
-          <li>Bytes 7–28 of the payload are set to <code>adv_key[6:28]</code>.</li>
-          <li>Byte 29 contains the top two bits of <code>adv_key[0]</code> (a small “hint” field).</li>
-          <li>Byte 0 (state/status) can encode a battery/status indicator depending on the sketch configuration.</li>
+          <li>Bytes 7-28 of the payload contain <code>adv_key[6:28]</code> (22 bytes of your public key)</li>
+          <li>Byte 29 holds the top two bits of <code>adv_key[0]</code> (like a little hint field)</li>
+          <li>Byte 0 can show battery level or status, depending on how you configure your device</li>
         </ul>
-        <h4>Addressing</h4>
+        <h4>About the MAC address</h4>
         <ul>
-          <li>The advertiser uses a static‑random address constructed from the adv key’s first bytes with the Static Random bits set (C0).</li>
-          <li>This avoids exposing a plain public key as a device address while remaining stable enough for observers to correlate.</li>
+          <li>Your device uses a static random address made from the first bytes of your advertisement key (with those special C0 bits set)</li>
+          <li>This way we don't expose the raw public key as the device address, but it's still consistent enough that other devices can track it</li>
         </ul>
 
-        
 
-        <h3 class="mt-10">Find My Protocol Flow (project view)</h3>
+
+        <h3 class="mt-10">The Complete Flow (How This All Works Together)</h3>
         <ol>
-          <li>Generate SECP224R1 keypair. The 28‑byte public X coordinate is the “advertisement key.”</li>
-          <li>Advertise the 31‑byte payload over BLE with Apple Company ID and Offline Finding frame type.</li>
-          <li>Nearby Apple devices observe the ad and upload encrypted reports to Apple.</li>
-          <li>The web service authenticates, queries by the hashed advertisement key (Base64 of SHA‑256 over the 28‑byte adv key), and receives encrypted reports.</li>
-          <li>The private key is used to decrypt those reports locally; results are stored in SQLite and shown in the UI.</li>
+          <li>Create a SECP224R1 keypair - that 28-byte public X coordinate becomes your "advertisement key"</li>
+          <li>Broadcast the 31-byte payload over Bluetooth with Apple's Company ID and the Offline Finding frame type</li>
+          <li>Any nearby iPhones, iPads, or Macs hear this and anonymously upload encrypted location reports to Apple</li>
+          <li>Your web service logs into Apple, asks for reports matching your hashed advertisement key (that's Base64 of the SHA-256 of your 28-byte key), and gets back encrypted location data</li>
+          <li>You use your private key to decrypt those reports locally, then save everything to SQLite and display it in the web interface</li>
         </ol>
 
-        <h3>Security and ethics</h3>
+        <h3>Important notes about security and ethics</h3>
         <ul>
-          <li>Use your own Apple account and devices. Respect local laws and Apple policies. This project is for research/learning purposes.</li>
-          <li>Apple rotates identifiers in production devices; this demo follows the OpenHaystack‑style approach with static keys for education.</li>
+          <li>Make sure to use your own Apple account and devices only. Follow local laws and Apple's terms of service. This is purely for educational and research purposes.</li>
+          <li>In real Apple devices, they rotate identifiers to protect privacy - this demo uses the OpenHaystack approach with static keys, which is totally fine for learning but not how production devices work.</li>
         </ul>
 
-        <h2 class="mt-12">Troubleshooting &amp; Tips</h2>
+        <h2 class="mt-12">When Things Don't Work (Troubleshooting)</h2>
         <ul>
-          <li>ESP32 upload issues: verify FQBN and serial port (<code>arduino-cli board list</code>), and use BOOT/EN buttons as needed per board.</li>
-          <li>No location reports: ensure iOS devices are in range and logged into iCloud; confirm the hashed adv key exactly matches the <code>.keys</code> file; give it time and move around.</li>
-          <li>BLE scanning doesn’t show a name: expected. Check that Manufacturer Data is present (0x004C) and payload length is 31.</li>
-          <li>Web service authentication: make sure anisette headers/Auth are valid; watch server logs for errors.</li>
+          <li><strong>ESP32 upload problems:</strong> Double-check your board settings and serial port (try <code>arduino-cli board list</code>), and don't forget to use the BOOT and EN buttons if your board needs them.</li>
+          <li><strong>No location dots showing up:</strong> Make sure there are iOS devices nearby that are signed into iCloud. Verify your hashed advertisement key exactly matches what's in your <code>.keys</code> file. Sometimes you just need to wait a bit and move around to different locations.</li>
+          <li><strong>BLE scanner doesn't show a device name:</strong> That's totally normal! Just check that you can see the Manufacturer Data (0x004C) and that the payload is 31 bytes long.</li>
+          <li><strong>Web service authentication failing:</strong> Make sure your anisette headers and authentication are working properly - check the server logs for specific error messages.</li>
         </ul>
 
         <hr class="my-12" />
 
-        <h2>Appendix — Where Things Live</h2>
+        <h2>Appendix — File Structure</h2>
         <ul>
-          <li>ESP32 sketch: <code>ESP32FindMyFlipper/ESP32FindMyFlipper.ino</code></li>
-          <li>Key generator: <code>AirTagGeneration/generate_keys.py</code></li>
-          <li>Web application: <code>AirTagGeneration/web_service.py</code></li>
-          <li>Database (local SQLite): <code>AirTagGeneration/keys/reports.db</code></li>
+          <li>ESP32 Arduino sketch: <code>ESP32FindMyFlipper/ESP32FindMyFlipper.ino</code></li>
+          <li>Key generation script: <code>AirTagGeneration/generate_keys.py</code></li>
+          <li>Web dashboard: <code>AirTagGeneration/web_service.py</code></li>
+          <li>Local database: <code>AirTagGeneration/keys/reports.db</code> (SQLite)</li>
         </ul>
 
-        <h3>Appendix — ESP32 advertiser internals (deep dive)</h3>
+        <h3>ESP32 Deep Dive (How the Bluetooth advertising actually works)</h3>
         <ul>
-          <li>Controller state machine: waits for <code>ESP_BT_CONTROLLER_STATUS_ENABLED</code> before configuring GAP advertising; retries if INIT/IDLE.</li>
-          <li>Advertising parameters: 20 ms–10.24 s range; default ~1s. Extremely low intervals cost power and increase RF contention.</li>
-          <li>Payload assembly: Manufacturer Data buffer contains 0x004C Apple ID, 0x12, 0x19, and the derived fields embedding the 28‑byte adv key.</li>
-          <li>Addressing: Static Random derived from adv key with C0 pattern; distinct from the Apple payload.</li>
+          <li>The state machine waits for the Bluetooth controller to be fully enabled before setting up advertising - it retries automatically if it gets stuck in INIT or IDLE states</li>
+          <li>Advertising timing can range from 20 milliseconds to 10.24 seconds - I default to about 1 second. Going too fast wastes battery and creates radio interference</li>
+          <li>The payload gets built by putting Apple's Company ID (0x004C), the Offline Finding type (0x12), length (0x19), and then all the derived fields that embed your 28-byte advertisement key</li>
+          <li>The MAC address is static random (derived from your adv key with those C0 bits) - this is completely separate from the Apple payload data</li>
         </ul>
 
-        <h3>Appendix — Retrieval side UI</h3>
+        <h3>Web Dashboard Deep Dive</h3>
         <ul>
-          <li>FastAPI serves HTML templates and Server‑Sent Events for live updates.</li>
-          <li>SQLite <code>tags</code> table: <code>hash_adv_key</code>, <code>private_key</code>, optional MQTT fields.</li>
-          <li>Scheduler queries Apple, decrypts with your private key, persists and streams updates.</li>
+          <li>FastAPI serves the HTML pages and uses Server-Sent Events to push live location updates</li>
+          <li>The SQLite database has a <code>tags</code> table that stores <code>hash_adv_key</code>, <code>private_key</code>, and any optional MQTT configuration</li>
+          <li>There's a background scheduler that queries Apple, decrypts reports with your private key, saves them to the database, and streams updates to connected clients</li>
         </ul>
 
-        <h3>References</h3>
+        <h3>Resources I found helpful</h3>
         <ul>
-          <li><a href="https://positive.security/blog/send-my" target="_blank" rel="noopener">Positive Security, “Send My: Arbitrary data transmission via Apple’s Find My network”</a></li>
+          <li><a href="https://positive.security/blog/send-my" target="_blank" rel="noopener">Positive Security's "Send My: Arbitrary data transmission via Apple's Find My network"</a> - this was my main reference</li>
         </ul>
 
-        <h3>Next steps</h3>
+        <h3>Ideas for future improvements</h3>
         <ul>
-          <li>Arbitrary data over MAC: Explore encoding bits in the static‑random address (while respecting address type constraints). Evaluate relay fidelity and deduplication effects.</li>
-          <li>ESP32 enclosure v2: Integrated battery (CR2032 or LiPo), switch, and strain‑relieved keyring. Minimize metal near the antenna.</li>
-          <li>Smaller form factor: Consider nRF52, ESP32‑C3, or custom nRF SoCs. Power budget for coin‑cell requires longer intervals and low‑duty controller sleep.</li>
+          <li><strong>Hide data in the MAC address:</strong> Play around with encoding information in the static random address (while staying within Bluetooth address rules). See how well it gets relayed and if there are any deduplication issues</li>
+          <li><strong>Better ESP32 case:</strong> Add a battery compartment (CR2032 or LiPo), a power switch, and a proper strain-relieved keyring attachment. Keep metal away from the antenna area</li>
+          <li><strong>Even smaller devices:</strong> Look into nRF52, ESP32-C3, or custom Nordic chips. For coin cell batteries, you'd need longer advertising intervals and smarter power management with sleep modes</li>
         </ul>
       </article>
       <nav class="mt-12 flex justify-between text-sm text-neutral-400">
