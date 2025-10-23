@@ -977,6 +977,30 @@
   :where(iframe):not(:where([class~="not-prose"],[class~="not-prose"] *)) {
     border-radius: 0.5rem !important;
   }
+  :where(pre):not(:where([class~="not-prose"],[class~="not-prose"] *)) {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
+  }
+  :where(pre)::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  :where(pre)::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+  }
+  :where(pre)::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  :where(pre)::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+  :where(pre)::-webkit-scrollbar-corner {
+    background: rgba(255, 255, 255, 0.05);
+  }
 }
 @property --tw-space-y-reverse {
   syntax: "*";

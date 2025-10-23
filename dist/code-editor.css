@@ -60,9 +60,44 @@
   margin: 0;
   padding: 14px 16px;
   background: transparent;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: pre;
 }
 /* Remove background from highlight.js theme */
 .hljs,
 pre code.hljs {
   background: transparent !important;
+}
+
+/* Custom scrollbar styling for code editors - matches dark theme */
+.code-editor-body pre {
+  /* For Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
+}
+
+.code-editor-body pre::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.code-editor-body pre::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.code-editor-body pre::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.code-editor-body pre::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.code-editor-body pre::-webkit-scrollbar-corner {
+  background: rgba(255, 255, 255, 0.05);
 }
