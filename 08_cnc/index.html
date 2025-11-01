@@ -27,7 +27,91 @@
       </div>
     </header>
     <main class="mx-auto max-w-3xl px-6 py-10">
-      <article class="prose prose-invert font-sans">Nothing here yet...</article>
+      <article class="prose prose-invert font-sans">
+        <h1>Week 8 — CNC: Making My Own Plates (So I Can Stop “Borrowing” from Annenberg)</h1>
+
+        <p>
+          The assignment this week was all about
+          <a
+            href="https://nathanmelenbrink.github.io/ps70/07_cnc/index.html"
+            target="_blank"
+            rel="noopener"
+            >CNC machining</a
+          >
+          — design something in CAD/CAM and machine it on the ShopBot. I decided to turn a small
+          moral dilemma into a design brief: rather than “borrowing” plates and silverware from the
+          Annenberg dining hall, I would fabricate my own. If I can make a plate I actually like,
+          maybe I’ll stop sneaking dishes back to my dorm.
+        </p>
+
+        <h2>Designing the plate in Aspire</h2>
+        <p>
+          I modeled a simple oval plate directly in Aspire. The workflow felt very approachable: set
+          the stock, sketch the oval, add a shallow pocket for the surface, and a raised rim for
+          that classic plate feel. Aspire’s 3D preview and doing an "air cut" helped me make sure I
+          would get what I wanted.
+        </p>
+        <ul>
+          <li>Material: plywood panel</li>
+          <li>Operations: pocket (interior), profile (outside)</li>
+          <li>Export: ShopBot toolpaths from Aspire</li>
+        </ul>
+
+        <h2>Cutting on the ShopBot</h2>
+        <p>
+          I clamped the sheet, zeroed the axes, and sent the Aspire toolpaths to the ShopBot. The
+          cut took about <strong>50 minutes</strong>.
+        </p>
+        <figure>
+          <a href="./cnc.jpeg">
+            <img src="./cnc.jpeg" alt="ShopBot cutting an oval plate mold from plywood" />
+          </a>
+          <figcaption class="text-sm text-neutral-400">
+            ShopBot in action — the Aspire toolpaths carved a clean pocket and rim for the mold.
+          </figcaption>
+        </figure>
+
+        <h2>Post‑processing the CNC mold</h2>
+        <p>
+          After the cut I cleaned up the blank so the vacuum pull would register cleanly and not
+          catch on fuzzy edges.
+        </p>
+        <ul>
+          <li><strong>Belt sander:</strong> Knocked off the tabs and trued the outer profile with
+          light passes to avoid rounding the reference plane.</li>
+          <li><strong>Hand sanding:</strong> Used high grit inside the tight fillet and along the rim
+          where the orbital can’t reach; slightly eased the top edge.</li>
+        </ul>
+        <p>
+          A quick dust‑off with a tack cloth made a bigger difference than expected — the smoother
+          surface produced noticeably cleaner definition in the final vacuum form.
+        </p>
+
+        <h2>Vacuum forming: a few tries to get it right</h2>
+        <p>
+          With the wooden mold done, I moved to the vacuum former to pull a plastic plate. This part
+          took experimentation. My first attempts were either under‑heated (soft corners, poor
+          definition) or a little too droopy (webbing near the rim). After tweaking heat time and
+          putting a lot of pressure for about 30 seconds with the vacuum, I finally got a clean form
+          that captured the rim nicely.
+        </p>
+        <figure>
+          <a href="./vacuum.jpeg">
+            <img src="./vacuum.jpeg" alt="Vacuum‑formed plastic plate pulled over the CNC’d mold" />
+          </a>
+          <figcaption class="text-sm text-neutral-400">
+            A vacuum‑formed plate after a couple of test pulls.
+          </figcaption>
+        </figure>
+
+        <p>
+          This project scratched two itches at once: learning the full Aspire → ShopBot → vacuum
+          form pipeline, and easing my conscience about dishes. I now have a functional plate I made
+          myself, and a workflow I can iterate on for different sizes or tray shapes. Next time I’d
+          like to try a food‑safe coating on a wooden version, or thermoform a thicker sheet for
+          durability.
+        </p>
+      </article>
       <nav class="mt-12 flex justify-between text-sm text-neutral-400">
         <a class="hover:text-white" href="../07_outputs/index.html">← Prev</a>
         <a class="hover:text-white" href="../09_networking/index.html">Next →</a>
@@ -36,7 +120,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
     <script>
-      document.addEventListener('DOMContentLoaded', function () {
+      document.addEventListener("DOMContentLoaded", function () {
         if (window.hljs) {
           hljs.highlightAll();
         }
