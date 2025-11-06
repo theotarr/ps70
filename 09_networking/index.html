@@ -15,6 +15,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css"
     />
+    <link href="../dist/code-editor.css" rel="stylesheet" />
     <link rel="icon" href="../favicon.ico" />
   </head>
   <body
@@ -176,7 +177,20 @@
         </ul>
         <h3>Firmware snippet (Arduino/ESP32)</h3>
         <p class="text-sm text-neutral-400">Inside your advertising payload builder/update loop:</p>
-        <pre><code class="language-cpp">// Read light and quantize to 4 bits
+        <div class="code-editor">
+          <div class="code-editor-header">
+            <div class="code-editor-dots">
+              <span class="code-editor-dot red"></span>
+              <span class="code-editor-dot yellow"></span>
+              <span class="code-editor-dot green"></span>
+            </div>
+            <div class="code-editor-title">ESP32FindMyFlipper.ino</div>
+            <div class="code-editor-actions">
+              <button type="button" class="code-editor-copy" data-copy="#week9-code1">Copy</button>
+            </div>
+          </div>
+          <div class="code-editor-body">
+            <pre><code id="week9-code1" class="language-cpp">// Read light and quantize to 4 bits
 int raw = analogRead(34);              // 0..4095 on many ESP32 boards
 int q   = map(raw, 0, 4095, 0, 15);    // 0..15
 
@@ -188,10 +202,25 @@ uint8_t status = (0x1 &lt;&lt; 4) | (q &amp; 0x0F);
 adv[0] = status;
 
 // Re-start (or update) advertising with the modified payload</code></pre>
+          </div>
+        </div>
 
         <h3>Server-side decode (Python)</h3>
         <p>When parsing reports, read the first payload byte to recover the light nibble:</p>
-        <pre><code class="language-python">def decode_status_byte(payload_bytes: bytes):
+        <div class="code-editor">
+          <div class="code-editor-header">
+            <div class="code-editor-dots">
+              <span class="code-editor-dot red"></span>
+              <span class="code-editor-dot yellow"></span>
+              <span class="code-editor-dot green"></span>
+            </div>
+            <div class="code-editor-title">web_service.py</div>
+            <div class="code-editor-actions">
+              <button type="button" class="code-editor-copy" data-copy="#week9-code2">Copy</button>
+            </div>
+          </div>
+          <div class="code-editor-body">
+            <pre><code id="week9-code2" class="language-python">def decode_status_byte(payload_bytes: bytes):
     status = payload_bytes[0]
     msg_type = (status &amp; 0xF0) &gt;&gt; 4
     value_nibble = status &amp; 0x0F
@@ -200,6 +229,8 @@ adv[0] = status;
         approx_raw = int(value_nibble / 15.0 * 4095)
         return {"type": "light", "q4": value_nibble, "approx_raw": approx_raw}
     return {"type": "unknown", "raw": status}</code></pre>
+          </div>
+        </div>
 
         <h2>Public key validity</h2>
         <p>
@@ -256,6 +287,39 @@ adv[0] = status;
         if (window.hljs) {
           hljs.highlightAll();
         }
+
+        var copyButtons = document.querySelectorAll(".code-editor-copy");
+        copyButtons.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var targetSelector = btn.getAttribute("data-copy");
+            var codeEl = document.querySelector(targetSelector);
+            if (!codeEl) return;
+            var text = codeEl.innerText;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(text).then(function () {
+                var original = btn.textContent;
+                btn.textContent = "Copied!";
+                setTimeout(function () {
+                  btn.textContent = original;
+                }, 1200);
+              });
+            } else {
+              var textarea = document.createElement("textarea");
+              textarea.value = text;
+              document.body.appendChild(textarea);
+              textarea.select();
+              try {
+                document.execCommand("copy");
+              } catch (e) {}
+              document.body.removeChild(textarea);
+              var original = btn.textContent;
+              btn.textContent = "Copied!";
+              setTimeout(function () {
+                btn.textContent = original;
+              }, 1200);
+            }
+          });
+        });
       });
     </script>
   </body>
