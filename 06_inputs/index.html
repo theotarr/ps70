@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>PS70 — Week 6: Inputs</title>
+    <title>PS70 — Week 6: Input Devices</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -15,6 +15,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css"
     />
+    <link href="../dist/code-editor.css" rel="stylesheet" />
     <link rel="icon" href="../favicon.ico" />
   </head>
   <body
@@ -22,12 +23,464 @@
   >
     <header class="border-b border-white/10">
       <div class="mx-auto max-w-3xl px-6 h-16 flex items-center justify-between">
-        <a href="../index.html" class="text-sm text-neutral-300 hover:text-white">← Back to home</a>
+        <a href="../index.html" class="text-sm text-neutral-300 hover:text-white">← Home</a>
         <span class="text-sm text-neutral-400">PS70 Fall 2025</span>
       </div>
     </header>
     <main class="mx-auto max-w-3xl px-6 py-10">
-      <article class="prose prose-invert font-sans">Nothing here yet...</article>
+      <article class="prose prose-invert font-sans">
+        <h1>Week 6 — Input Devices</h1>
+        <p>
+          This week I built two simple inputs on an ESP32-WROOM-32: a capacitive touch pad using the ESP32's built-in touch pins, and a 10k NTC thermistor divider for temperature. I focused on getting stable readings, choosing thresholds, and keeping the loop non-blocking.
+        </p>
+
+        <h2>Part 1: Capacitive Touch Sensor</h2>
+        <p>
+          The ESP32-WROOM-32 includes a dedicated capacitive touch peripheral (touch pads T0–T9). I used <strong>T0 (GPIO4)</strong> with a small copper tape electrode to make a simple touch-activated LED.
+        </p>
+
+        <h3>How Capacitive Sensing Works</h3>
+        <p>
+          Capacitive touch sensing measures changes in capacitance when your finger approaches a conductive electrode. On the ESP32 touch pads, touching typically causes the reported value to <em>drop</em>, so I set a threshold slightly below the idle baseline.
+        </p>
+
+        <h3>Pins (what I actually used)</h3>
+        <ul>
+          <li><strong>Touch pin:</strong> T0 / GPIO4</li>
+          <li><strong>LED pin:</strong> GPIO2 (on-board LED on my dev board)</li>
+        </ul>
+
+        <h3>Schematic</h3>
+        <figure class="my-6">
+          <svg viewBox="0 0 600 280" width="100%" style="max-width:600px;background:#0a0a0a" class="rounded-lg">
+            <!-- Title -->
+            <text x="300" y="30" fill="#9aa" text-anchor="middle" font-size="14" font-weight="500">Capacitive Touch Sensor Circuit</text>
+            
+            <!-- ESP32 Box -->
+            <rect x="50" y="60" width="140" height="180" rx="8" fill="#111" stroke="#444" stroke-width="2"/>
+            <text x="120" y="90" fill="#ddd" text-anchor="middle" font-size="14" font-weight="600">ESP32-WROOM-32</text>
+            
+            <!-- GPIO Pins -->
+            <rect x="170" y="130" width="20" height="16" fill="#333" stroke="#555"/>
+            <text x="180" y="142" fill="#fc6" text-anchor="middle" font-size="9">T0</text>
+            <text x="145" y="142" fill="#888" text-anchor="end" font-size="10">GPIO4</text>
+            
+            <rect x="170" y="160" width="20" height="16" fill="#333" stroke="#555"/>
+            <text x="180" y="172" fill="#6cf" text-anchor="middle" font-size="9">D2</text>
+            <text x="145" y="172" fill="#888" text-anchor="end" font-size="10">LED</text>
+            
+            <rect x="170" y="190" width="20" height="16" fill="#333" stroke="#555"/>
+            <text x="180" y="202" fill="#f66" text-anchor="middle" font-size="9">GND</text>
+            
+            <!-- Touch Electrode -->
+            <line x1="190" y1="138" x2="280" y2="138" stroke="#fc6" stroke-width="2"/>
+            <rect x="280" y="100" width="100" height="80" rx="12" fill="none" stroke="#fc6" stroke-width="2" stroke-dasharray="5,3"/>
+            <text x="330" y="135" fill="#fc6" text-anchor="middle" font-size="11">Touch</text>
+            <text x="330" y="150" fill="#fc6" text-anchor="middle" font-size="11">Electrode</text>
+            <text x="330" y="170" fill="#666" text-anchor="middle" font-size="9">(copper tape/foil)</text>
+            
+            <!-- LED Circuit -->
+            <line x1="190" y1="168" x2="420" y2="168" stroke="#6cf" stroke-width="2"/>
+            <!-- LED Symbol -->
+            <polygon points="440,158 440,178 460,168" fill="none" stroke="#6cf" stroke-width="2"/>
+            <line x1="460" y1="158" x2="460" y2="178" stroke="#6cf" stroke-width="2"/>
+            <!-- Resistor -->
+            <line x1="460" y1="168" x2="480" y2="168" stroke="#6cf" stroke-width="2"/>
+            <rect x="480" y="163" width="30" height="10" fill="#333" stroke="#6cf"/>
+            <text x="495" y="188" fill="#666" text-anchor="middle" font-size="9">220Ω</text>
+            <line x1="510" y1="168" x2="540" y2="168" stroke="#6cf" stroke-width="2"/>
+            <line x1="540" y1="168" x2="540" y2="202" stroke="#f66" stroke-width="2"/>
+            <line x1="190" y1="198" x2="540" y2="198" stroke="#f66" stroke-width="2"/>
+            
+            <!-- Legend -->
+            <rect x="420" y="80" width="160" height="60" rx="6" fill="#0a0a0a" stroke="#333"/>
+            <text x="500" y="98" fill="#888" text-anchor="middle" font-size="10">Touch → LED lights up</text>
+            <circle cx="440" cy="115" r="4" fill="#fc6"/>
+            <text x="455" y="118" fill="#666" font-size="9">Touch pad (T0)</text>
+            <circle cx="440" cy="130" r="4" fill="#6cf"/>
+            <text x="455" y="133" fill="#666" font-size="9">LED Output</text>
+          </svg>
+          <figcaption>ESP32-WROOM-32 touch pad (T0 / GPIO4) with a copper tape electrode, used to drive an LED output.</figcaption>
+        </figure>
+
+        <h3>C++ Class Implementation</h3>
+        <p>
+          I polled <code>touchRead()</code> every 50ms and used a threshold based on a quick baseline: idle readings were ~60–90 and a finger press dropped it to ~20–40, so I used a threshold of 45.
+        </p>
+
+        <div class="code-editor">
+          <div class="code-editor-header">
+            <div class="code-editor-dots">
+              <span class="code-editor-dot red"></span>
+              <span class="code-editor-dot yellow"></span>
+              <span class="code-editor-dot green"></span>
+            </div>
+            <div class="code-editor-title">TouchSensor.ino</div>
+            <div class="code-editor-actions">
+              <button type="button" class="code-editor-copy" data-copy="#code-touch">Copy</button>
+            </div>
+          </div>
+          <div class="code-editor-body">
+            <pre><code id="code-touch" class="language-cpp">
+// Pin definitions
+const uint8_t TOUCH_PIN = 4;  // T0 on ESP32-WROOM-32
+const uint8_t LED_PIN = 2;
+
+class TouchSensor {
+private:
+  uint8_t touchPin;
+  uint8_t ledPin;
+  uint16_t threshold;
+  unsigned long lastReadTime;
+  unsigned long readInterval;
+  uint16_t currentValue;
+  bool isTouched;
+
+public:
+  TouchSensor(uint8_t tPin, uint8_t lPin, uint16_t thresh = 45, unsigned long interval = 50)
+    : touchPin(tPin), ledPin(lPin), threshold(thresh),
+      lastReadTime(0), readInterval(interval), currentValue(0), isTouched(false) {}
+
+  void begin() {
+    pinMode(ledPin, OUTPUT);
+    digitalWrite(ledPin, LOW);
+  }
+
+  void update() {
+    unsigned long now = millis();
+    if (now - lastReadTime >= readInterval) {
+      lastReadTime = now;
+      currentValue = touchRead(touchPin);
+      
+      // Touch detected when value drops below threshold
+      bool touched = (currentValue < threshold);
+      
+      if (touched != isTouched) {
+        isTouched = touched;
+        digitalWrite(ledPin, isTouched ? HIGH : LOW);
+        
+        Serial.print("Touch: ");
+        Serial.print(currentValue);
+        Serial.println(isTouched ? " [TOUCHED]" : " [released]");
+      }
+    }
+  }
+
+  uint16_t getValue() const { return currentValue; }
+  bool getTouched() const { return isTouched; }
+};
+
+
+TouchSensor touchSensor(TOUCH_PIN, LED_PIN, 45, 50);
+
+void setup() {
+  Serial.begin(115200);
+  touchSensor.begin();
+  Serial.println("Capacitive Touch Sensor Ready");
+}
+
+void loop() {
+  touchSensor.update();
+}</code></pre>
+          </div>
+        </div>
+
+        <h2>Part 2: Thermistor Temperature Sensor</h2>
+        <p>
+          For the temperature sensor, I used a 10kΩ NTC (Negative Temperature Coefficient) thermistor in a voltage divider configuration. NTC thermistors decrease in resistance as temperature increases, which creates a non-linear relationship that requires calibration.
+        </p>
+
+        <h3>My Setup</h3>
+        <p>
+          I integrated the thermistor into my ESP32-based AirSensor for my final project to monitor ambient temperature. The sensor data could eventually be transmitted over Apple's Find My network (see <a href="../13_finalproject/index.html">Final Project</a>).
+        </p>
+
+        <figure class="my-6">
+          <a href="../13_finalproject/thermistor-internals.png">
+            <img src="../13_finalproject/thermistor-internals.png" alt="Thermistor AirSensor" class="rounded-lg" />
+          </a>
+          <figcaption>Thermistor AirSensor for my final project.</figcaption>
+        </figure>
+
+        <h3>Voltage Divider Schematic</h3>
+        <figure class="my-6">
+          <svg viewBox="0 0 550 320" width="100%" style="max-width:550px;background:#0a0a0a" class="rounded-lg">
+            <!-- VCC Rail -->
+            <line x1="100" y1="60" x2="100" y2="80" stroke="#f66" stroke-width="2"/>
+            <text x="100" y="55" fill="#f66" text-anchor="middle" font-size="11">3.3V</text>
+            
+            <!-- Fixed Resistor -->
+            <line x1="100" y1="80" x2="100" y2="100" stroke="#888" stroke-width="2"/>
+            <rect x="85" y="100" width="30" height="50" fill="#333" stroke="#888" stroke-width="2"/>
+            <text x="100" y="130" fill="#ddd" text-anchor="middle" font-size="10">10kΩ</text>
+            <text x="130" y="125" fill="#666" font-size="9">R_fixed</text>
+            <line x1="100" y1="150" x2="100" y2="170" stroke="#888" stroke-width="2"/>
+            
+            <!-- Junction point -->
+            <circle cx="100" cy="170" r="4" fill="#fc6"/>
+            
+            <!-- ADC Connection -->
+            <line x1="100" y1="170" x2="200" y2="170" stroke="#fc6" stroke-width="2"/>
+            <text x="200" y="165" fill="#fc6" font-size="10">→ ADC (GPIO34)</text>
+            
+            <!-- Thermistor (with zigzag symbol) -->
+            <line x1="100" y1="170" x2="100" y2="190" stroke="#888" stroke-width="2"/>
+            <rect x="85" y="190" width="30" height="50" fill="#222" stroke="#6cf" stroke-width="2"/>
+            <!-- Thermistor symbol inside -->
+            <line x1="92" y1="200" x2="108" y2="200" stroke="#6cf" stroke-width="1"/>
+            <line x1="92" y1="230" x2="108" y2="230" stroke="#6cf" stroke-width="1"/>
+            <path d="M100,205 L95,210 L105,215 L95,220 L105,225 L100,230" fill="none" stroke="#6cf" stroke-width="1.5"/>
+            <text x="130" y="220" fill="#6cf" font-size="9">NTC 10kΩ</text>
+            <text x="130" y="232" fill="#666" font-size="8">@ 25°C</text>
+            <line x1="100" y1="240" x2="100" y2="270" stroke="#888" stroke-width="2"/>
+            
+            <!-- GND -->
+            <line x1="85" y1="270" x2="115" y2="270" stroke="#888" stroke-width="2"/>
+            <line x1="90" y1="275" x2="110" y2="275" stroke="#888" stroke-width="1.5"/>
+            <line x1="95" y1="280" x2="105" y2="280" stroke="#888" stroke-width="1"/>
+            <text x="100" y="295" fill="#888" text-anchor="middle" font-size="10">GND</text>
+            
+            <!-- Formula box -->
+            <rect x="280" y="80" width="240" height="120" rx="8" fill="#111" stroke="#444"/>
+            <text x="400" y="105" fill="#ddd" text-anchor="middle" font-size="12" font-weight="500">Voltage Divider Formula</text>
+            <text x="400" y="135" fill="#fc6" text-anchor="middle" font-size="10" font-family="monospace">V_out = V_in × R_therm / (R_fix + R_therm)</text>
+            <text x="400" y="165" fill="#888" text-anchor="middle" font-size="10">At 25°C: V_out = 3.3V × 10k / 20k = 1.65V</text>
+            <text x="400" y="185" fill="#888" text-anchor="middle" font-size="10">ADC reading ≈ 2048 (midpoint of 12-bit)</text>
+          </svg>
+          <figcaption>Voltage divider with 10kΩ NTC thermistor. The fixed resistor matches the thermistor's nominal resistance at 25°C.</figcaption>
+        </figure>
+
+        <h3>C++ Class Implementation</h3>
+        <p>
+          The <code>ThermistorSensor</code> class uses the Steinhart-Hart equation to convert the ADC reading to temperature. It also controls an LED that turns on when the temperature exceeds a threshold.
+        </p>
+
+        <div class="code-editor">
+          <div class="code-editor-header">
+            <div class="code-editor-dots">
+              <span class="code-editor-dot red"></span>
+              <span class="code-editor-dot yellow"></span>
+              <span class="code-editor-dot green"></span>
+            </div>
+            <div class="code-editor-title">ThermistorSensor.ino</div>
+            <div class="code-editor-actions">
+              <button type="button" class="code-editor-copy" data-copy="#code-therm">Copy</button>
+            </div>
+          </div>
+          <div class="code-editor-body">
+            <pre><code id="code-therm" class="language-cpp">class ThermistorSensor {
+private:
+  // Pin configuration
+  uint8_t adcPin;
+  uint8_t ledPin;
+  
+  // Thermistor parameters (10k NTC, B=3950)
+  static constexpr float SERIES_RESISTOR = 10000.0f;   // Fixed resistor value
+  static constexpr float NOMINAL_RESISTANCE = 10000.0f; // Thermistor @ 25°C
+  static constexpr float NOMINAL_TEMP = 25.0f;          // Temperature for nominal resistance
+  static constexpr float B_COEFFICIENT = 3950.0f;       // Beta coefficient
+  static constexpr float ADC_MAX = 4095.0f;             // 12-bit ADC
+  
+  // Timing (non-blocking)
+  unsigned long lastReadTime;
+  unsigned long readInterval;
+  
+  // State
+  float currentTempC;
+  float alertThreshold;
+  bool alertActive;
+  uint16_t rawADC;
+
+  float calculateResistance(uint16_t adcValue) {
+    // Voltage divider: R_therm = R_series * ADC / (ADC_MAX - ADC)
+    if (adcValue == 0) return INFINITY;
+    if (adcValue >= ADC_MAX) return 0;
+    return SERIES_RESISTOR * (static_cast&lt;float&gt;(adcValue) / (ADC_MAX - static_cast&lt;float&gt;(adcValue)));
+  }
+
+  float resistanceToTempC(float resistance) {
+    // Simplified Steinhart-Hart (B-parameter equation)
+    // 1/T = 1/T0 + (1/B) * ln(R/R0)
+    float steinhart = resistance / NOMINAL_RESISTANCE;
+    steinhart = log(steinhart);
+    steinhart /= B_COEFFICIENT;
+    steinhart += 1.0f / (NOMINAL_TEMP + 273.15f);
+    steinhart = 1.0f / steinhart;
+    return steinhart - 273.15f;  // Convert Kelvin to Celsius
+  }
+
+public:
+  ThermistorSensor(uint8_t aPin, uint8_t lPin, float threshold = 30.0f, unsigned long interval = 500)
+    : adcPin(aPin), ledPin(lPin), lastReadTime(0), readInterval(interval),
+      currentTempC(0), alertThreshold(threshold), alertActive(false), rawADC(0) {}
+
+  void begin() {
+    pinMode(ledPin, OUTPUT);
+    digitalWrite(ledPin, LOW);
+    analogReadResolution(12);  // ESP32 12-bit ADC
+  }
+
+  void update() {
+    unsigned long now = millis();
+    if (now - lastReadTime >= readInterval) {
+      lastReadTime = now;
+      
+      // Read and convert
+      rawADC = analogRead(adcPin);
+      float resistance = calculateResistance(rawADC);
+      currentTempC = resistanceToTempC(resistance);
+      
+      // Update alert LED
+      bool newAlert = (currentTempC >= alertThreshold);
+      if (newAlert != alertActive) {
+        alertActive = newAlert;
+        digitalWrite(ledPin, alertActive ? HIGH : LOW);
+      }
+      
+      // Debug output
+      Serial.print("ADC: ");
+      Serial.print(rawADC);
+      Serial.print(" | R: ");
+      Serial.print(resistance, 0);
+      Serial.print("Ω | Temp: ");
+      Serial.print(currentTempC, 1);
+      Serial.print("°C");
+      if (alertActive) Serial.print(" [ALERT]");
+      Serial.println();
+    }
+  }
+
+  float getTempC() const { return currentTempC; }
+  float getTempF() const { return currentTempC * 9.0f / 5.0f + 32.0f; }
+  uint16_t getRawADC() const { return rawADC; }
+  bool isAlert() const { return alertActive; }
+  void setThreshold(float thresh) { alertThreshold = thresh; }
+};
+
+// Pin definitions
+const uint8_t THERMISTOR_PIN = 34;  // ADC1 channel
+const uint8_t ALERT_LED_PIN = 2;
+
+ThermistorSensor tempSensor(THERMISTOR_PIN, ALERT_LED_PIN, 30.0f, 500);
+
+void setup() {
+  Serial.begin(115200);
+  tempSensor.begin();
+  Serial.println("Thermistor Sensor Ready");
+  Serial.println("Alert threshold: 30°C");
+}
+
+void loop() {
+  tempSensor.update();
+}</code></pre>
+          </div>
+        </div>
+
+        <h2>Temperature Sensor Calibration</h2>
+        <p>
+          I sanity-checked the thermistor conversion against two real-world conditions (room air and outside air) and used the readings to pick reasonable expected ranges.
+        </p>
+
+        <h3>Calibration Procedure</h3>
+        <p>Reference points I used:</p>
+        <ol>
+          <li><strong>Room air (~21–23°C)</strong></li>
+          <li><strong>Outside air (~35°F / ~2°C)</strong> — wait ~1–2 minutes for the reading to settle</li>
+        </ol>
+
+        <h3>Calibration Data</h3>
+        <p>Here's the data I collected for my 10kΩ NTC thermistor (B=3950) with a 10kΩ fixed resistor:</p>
+        
+        <div class="overflow-x-auto my-6">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-white/10">
+                <th class="text-left py-2 px-3 text-neutral-400">Temperature</th>
+                <th class="text-left py-2 px-3 text-neutral-400">Condition</th>
+                <th class="text-left py-2 px-3 text-neutral-400">Resistance (Ω)</th>
+                <th class="text-left py-2 px-3 text-neutral-400">ADC Reading</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b border-white/5">
+                <td class="py-2 px-3">~70°F (21°C)</td>
+                <td class="py-2 px-3 text-neutral-400">Room air</td>
+                <td class="py-2 px-3 font-mono text-cyan-400">~11,800</td>
+                <td class="py-2 px-3 font-mono">avg 2220 (range 2205–2238)</td>
+              </tr>
+              <tr class="border-b border-white/5">
+                <td class="py-2 px-3">~35°F (2°C)</td>
+                <td class="py-2 px-3 text-neutral-400">Outside air</td>
+                <td class="py-2 px-3 font-mono text-cyan-400">~30,300</td>
+                <td class="py-2 px-3 font-mono">avg 3080 (range 3045–3115)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Calibration Graph</h3>
+        <p>
+          The relationship is strongly non-linear, so I used the B-parameter model (B=3950) rather than trying to fit a line.
+        </p>
+
+        <figure class="my-6">
+          <svg viewBox="0 0 600 260" width="100%" style="max-width:600px;background:#0a0a0a" class="rounded-lg">
+            <text x="300" y="28" fill="#ddd" text-anchor="middle" font-size="14" font-weight="500">Thermistor Model: Temperature vs ADC (12-bit)</text>
+
+            <!-- Axes -->
+            <line x1="80" y1="50" x2="80" y2="220" stroke="#444" stroke-width="2"/>
+            <line x1="80" y1="220" x2="560" y2="220" stroke="#444" stroke-width="2"/>
+
+            <!-- Labels -->
+            <text x="320" y="252" fill="#9aa" text-anchor="middle" font-size="11">Temperature (°C)</text>
+            <text x="28" y="140" fill="#9aa" text-anchor="middle" font-size="11" transform="rotate(-90, 28, 140)">ADC Reading (0–4095)</text>
+
+            <!-- X ticks -->
+            <line x1="133.3" y1="220" x2="133.3" y2="226" stroke="#666" stroke-width="1"/>
+            <text x="133.3" y="242" fill="#666" text-anchor="middle" font-size="10">0</text>
+            <line x1="240.0" y1="220" x2="240.0" y2="226" stroke="#666" stroke-width="1"/>
+            <text x="240.0" y="242" fill="#666" text-anchor="middle" font-size="10">10</text>
+            <line x1="346.7" y1="220" x2="346.7" y2="226" stroke="#666" stroke-width="1"/>
+            <text x="346.7" y="242" fill="#666" text-anchor="middle" font-size="10">20</text>
+            <line x1="453.3" y1="220" x2="453.3" y2="226" stroke="#666" stroke-width="1"/>
+            <text x="453.3" y="242" fill="#666" text-anchor="middle" font-size="10">30</text>
+            <line x1="560.0" y1="220" x2="560.0" y2="226" stroke="#666" stroke-width="1"/>
+            <text x="560.0" y="242" fill="#666" text-anchor="middle" font-size="10">40</text>
+
+            <!-- Y ticks (approx) -->
+            <line x1="74" y1="220" x2="80" y2="220" stroke="#666" stroke-width="1"/>
+            <text x="70" y="224" fill="#666" text-anchor="end" font-size="10">0</text>
+            <line x1="74" y1="177.5" x2="80" y2="177.5" stroke="#666" stroke-width="1"/>
+            <text x="70" y="181.5" fill="#666" text-anchor="end" font-size="10">1024</text>
+            <line x1="74" y1="135.0" x2="80" y2="135.0" stroke="#666" stroke-width="1"/>
+            <text x="70" y="139.0" fill="#666" text-anchor="end" font-size="10">2048</text>
+            <line x1="74" y1="92.5" x2="80" y2="92.5" stroke="#666" stroke-width="1"/>
+            <text x="70" y="96.5" fill="#666" text-anchor="end" font-size="10">3072</text>
+
+            <!-- Model curve (B=3950, 10k/10k divider) -->
+            <polyline points="80.0,81.5 133.3,89.0 154.7,92.2 186.7,97.3 240.0,106.3 293.3,115.8 346.7,125.4 357.3,127.4 368.0,129.3 378.7,131.2 400.0,135.0 453.3,144.2 506.7,153.0 560.0,161.1"
+                      fill="none" stroke="#6cf" stroke-width="2.5"/>
+
+            <!-- Measured points (highlight) -->
+            <circle cx="357.3" cy="127.4" r="5" fill="#fc6" />
+            <text x="365.5" y="118.5" fill="#fc6" font-size="10">~21°C</text>
+
+            <circle cx="154.7" cy="92.2" r="5" fill="#fc6" />
+            <text x="162.5" y="83.5" fill="#fc6" font-size="10">~2°C</text>
+
+            <!-- Legend -->
+            <rect x="410" y="60" width="170" height="52" rx="6" fill="#111" stroke="#333"/>
+            <line x1="422" y1="78" x2="452" y2="78" stroke="#6cf" stroke-width="2.5"/>
+            <text x="460" y="81" fill="#888" font-size="10">Curve</text>
+            <circle cx="437" cy="98" r="4" fill="#fc6"/>
+            <text x="460" y="101" fill="#888" font-size="10">Measured</text>
+          </svg>
+          <figcaption>ADC vs temperature for a 10k NTC (B=3950) in a 10k/10k divider. The highlighted points correspond to the two conditions I measured.</figcaption>
+        </figure>
+
+        <h2>CNC Preparation</h2>
+        <p>I prepared a simple plate for CNC milling in Week 8, so I can have a dish to hold my wallet, Airpods, keys, and other small items on my desk.</p>
+      </article>
       <nav class="mt-12 flex justify-between text-sm text-neutral-400">
         <a class="hover:text-white" href="../05_3Ddesign/index.html">← Prev</a>
         <a class="hover:text-white" href="../07_outputs/index.html">Next →</a>
@@ -36,10 +489,43 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
     <script>
-      document.addEventListener('DOMContentLoaded', function () {
+      document.addEventListener("DOMContentLoaded", function () {
         if (window.hljs) {
           hljs.highlightAll();
         }
+
+        var copyButtons = document.querySelectorAll(".code-editor-copy");
+        copyButtons.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var targetSelector = btn.getAttribute("data-copy");
+            var codeEl = document.querySelector(targetSelector);
+            if (!codeEl) return;
+            var text = codeEl.innerText;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(text).then(function () {
+                var original = btn.textContent;
+                btn.textContent = "Copied!";
+                setTimeout(function () {
+                  btn.textContent = original;
+                }, 1200);
+              });
+            } else {
+              var textarea = document.createElement("textarea");
+              textarea.value = text;
+              document.body.appendChild(textarea);
+              textarea.select();
+              try {
+                document.execCommand("copy");
+              } catch (e) {}
+              document.body.removeChild(textarea);
+              var original = btn.textContent;
+              btn.textContent = "Copied!";
+              setTimeout(function () {
+                btn.textContent = original;
+              }, 1200);
+            }
+          });
+        });
       });
     </script>
   </body>
