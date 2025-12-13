@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>PS70 — Final Project</title>
+    <title>PS70 — AirSensors</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -14,6 +14,11 @@
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css"
+    />
+    <link href="../dist/code-editor.css" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
     />
     <link rel="icon" href="../favicon.ico" />
   </head>
@@ -28,191 +33,498 @@
     </header>
     <main class="mx-auto max-w-3xl px-6 py-10">
       <article class="prose prose-invert font-sans">
-        <h1>Final Project — AirTag‑like Tracker</h1>
+        <h1>AirSensors: a tiny data modem hiding inside Find My</h1>
         <p>
-          Building a privacy‑aware, Find My–compatible tracker in three stages: a Flipper Zero MVP,
-          an ESP32 intermediary prototype to validate custom BLE advertising and key rotation, and a
-          custom ultra‑low‑power coin‑cell tag based on nRF52 with a 3D‑printed enclosure.
+          I wanted a sensor you could drop somewhere inconvenient — a hallway, a basement, a bike rack — and still get <em>some</em> telemetry
+          back without Wi‑Fi, without a SIM, and without setting up a gateway. That’s where AirSensors came from: a family of small,
+          battery-powered sensors that use Apple’s Find My “Offline Finding” network as a <strong>best-effort uplink</strong>.
+        </p>
+        <p>
+          This post is the story of how I built it: starting from a normal Find My beacon, then turning the “public key” field into a
+          1‑bit carrier, and finally building a gateway that reconstructs sensor readings from report presence/absence. Along the way,
+          the biggest surprise was a crypto constraint that looks like “random missing bits” until you understand it.
         </p>
 
-        <h2>Demo Video</h2>
+        <h2>Demo video</h2>
         <figure class="my-6">
-          <div class="aspect-video w-full max-w-2xl mx-auto rounded-lg overflow-hidden bg-neutral-900">
-            <iframe 
-              src="https://drive.google.com/file/d/17roX8MmJ5BvE-yVbQqJ-YTUGVzGTiI9G/preview" 
-              width="100%" 
-              height="100%" 
+          <div class="aspect-video w-full max-w-2xl mx-auto rounded-lg overflow-hidden bg-neutral-900 ring-1 ring-white/10">
+            <iframe
+              src="https://drive.google.com/file/d/17roX8MmJ5BvE-yVbQqJ-YTUGVzGTiI9G/preview"
+              width="100%"
+              height="100%"
               allow="autoplay"
               class="w-full h-full"
+              title="AirSensors demo video"
+              loading="lazy"
             ></iframe>
           </div>
         </figure>
 
-        <h2>Stage 2b — "Send My" (ESP32 data modem)</h2>
-        <p>
-          I will explore the Positive Security “Send My” approach — encoding data into Find My
-          rolling keys and retrieving it via Apple’s report API — to evaluate feasibility, latency,
-          and throughput for sensor uplink use‑cases. See
-          <a href="https://positive.security/blog/send-my" target="_blank" rel="noopener">Send My: Arbitrary data transmission via Apple’s Find My network</a>.
-        </p>
-        <ul>
-          <li>Goal: PoC on ESP32 with reliable bit/byte decode; measure latency and bytes/min.</li>
-          <li>Impl: ESP‑IDF/Arduino + NimBLE; index + message IDs; serial CLI to send messages.</li>
-          <li>Ethics: upload‑only PoC; document risks/abuse mitigations; use own keys only.</li>
-        </ul>
-        
-        <h3>Use cases</h3>
-        <ul>
-          <li>Battery‑powered environmental sensors (bytes/minute status)</li>
-          <li>Location + tiny telemetry (motion events, battery %, tamper flag)</li>
-          <li>Distributed signage/alerts where cellular is unavailable</li>
-        </ul>
-
-        <h3>How it works</h3>
-        <figure>
-          <!-- Inline SVG: Key encoding concept -->
-          <svg viewBox="0 0 840 200" width="100%" style="max-width:840px;background:#0a0a0a" class="rounded-lg">
-            <rect x="10" y="20" width="250" height="160" rx="8" fill="#111" stroke="#444"/>
-            <text x="135" y="60" fill="#ddd" text-anchor="middle" font-size="14">Payload bytes</text>
-            <text x="135" y="85" fill="#9aa" text-anchor="middle" font-size="12">seq, msgId, data…</text>
-
-            <rect x="300" y="20" width="250" height="160" rx="8" fill="#111" stroke="#444"/>
-            <text x="425" y="60" fill="#ddd" text-anchor="middle" font-size="14">Key encoder</text>
-            <text x="425" y="85" fill="#9aa" text-anchor="middle" font-size="12">map bytes → rotating pubkeys</text>
-
-            <rect x="590" y="20" width="240" height="160" rx="8" fill="#111" stroke="#444"/>
-            <text x="710" y="60" fill="#ddd" text-anchor="middle" font-size="14">BLE advertiser</text>
-            <text x="710" y="85" fill="#9aa" text-anchor="middle" font-size="12">broadcasts Find My frames</text>
-
-            <defs>
-              <marker id="arrow2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
-                <path d="M0,0 L0,6 L6,3 z" fill="#fc6" />
-              </marker>
-            </defs>
-            <line x1="260" y1="100" x2="300" y2="100" stroke="#fc6" stroke-width="2" marker-end="url(#arrow2)"/>
-            <line x1="550" y1="100" x2="590" y2="100" stroke="#fc6" stroke-width="2" marker-end="url(#arrow2)"/>
-          </svg>
-          <figcaption>Bytes are encoded into rotating public keys, then advertised over BLE.</figcaption>
+        <figure class="my-6">
+          <img
+            src="./tags.jpeg"
+            alt="AirSensors hardware and enclosure photo"
+            loading="lazy"
+            class="rounded-xl ring-1 ring-white/10"
+          />
+          <figcaption>AirSensor prototypes.</figcaption>
         </figure>
 
-        <h3>Constraints &amp; notes</h3>
-        <ul>
-          <li>Very low throughput (bytes/minute), bursty, best‑effort delivery</li>
-          <li>Opportunistic coverage depends on passerby devices</li>
-          <li>Encode redundancy and sequence numbers; sign content you control</li>
-        </ul>
-
-        <h3>Safety &amp; ethics</h3>
-        <ul>
-          <li>Use keys you generated; label devices; document benign telemetry only</li>
-          <li>Respect local laws/ToS; research purpose, not for abuse</li>
-        </ul>
-
-        <h2>Timeline &amp; Milestones</h2>
-        <ul>
-          <li><strong>Week 6</strong>: Flipper MVP validated; start ESP32 OpenHaystack adv PoC</li>
-          <li><strong>Week 7</strong>: “Send My” ESP32 modem PoC; retrieval + decoding working</li>
-          <li><strong>Week 8</strong>: Select nRF52 module; schematic + PCB layout; firmware port skeleton</li>
-          <li><strong>Week 9</strong>: Order PCB/parts; implement key rotation + low‑power sleep on nRF52</li>
-          <li><strong>Week 10</strong>: PCB assembly; SWD bring‑up; first nRF52 adv seen on iOS</li>
-          <li><strong>Week 11</strong>: Current profiling + battery estimate; Enclosure Rev A CAD + print</li>
-          <li><strong>Week 12</strong>: Polish: BOM freeze, enclosure Rev B, documentation</li>
-        </ul>
-
-        <h3>Exit criteria</h3>
-        <ul>
-          <li><strong>Flipper MVP</strong>: mapped sightings from a real‑world walk</li>
-          <li><strong>ESP32 prototype</strong>: OpenHaystack adv recognized via reports; stable rotation; baseline current</li>
-          <li><strong>“Send My” PoC</strong>: reliable upload‑only data transfer demo with measured latency</li>
-          <li><strong>Custom HW Rev A</strong>: nRF52 adv detected and keys rotate; ≥24h runtime on CR2032</li>
-          <li><strong>Final</strong>: stable adv, enclosure fit, documented build, ethical use statement</li>
-        </ul>
-
-        <h2>Bill of Materials (Rev A)</h2>
-        <h3>Flipper MVP</h3>
-        <ul>
-          <li>Flipper Zero + SD card</li>
-        </ul>
-
-        <h3>ESP32 Prototype (intermediary)</h3>
-        <ul>
-          <li>ESP32‑DevKitC or ESP32‑S3 board — 1</li>
-          <li>USB cable/power bank or small LiPo — 1</li>
-        </ul>
-
-        <h3>Custom Coin‑Cell Tag (nRF52)</h3>
-        <ul>
-          <li>Raytac MDBT42Q (nRF52832) — 1 (or MDBT50Q nRF52840)</li>
-          <li>Keystone 3034 CR2032 holder — 1</li>
-          <li>C&amp;K JS102011SAQN slide switch — 1</li>
-          <li>LIS3DH (optional) + 0.1&nbsp;µF/1&nbsp;µF caps — 1</li>
-          <li>0603 passives — assorted</li>
-          <li>PCB 2‑layer, 1.6&nbsp;mm FR‑4 — 5 (min order)</li>
-          <li>3D printed enclosure (PETG/ABS) — 1 set</li>
-          <li>Tools (one‑time): Tag‑Connect cable; J‑Link EDU Mini/CMSIS‑DAP; CR2032 cells</li>
-        </ul>
-
-        <h2>3D Model Viewers</h2>
         <p>
-          Interactive 3D viewers for the custom enclosures. Spin, zoom, and inspect the
-          designs yourself.
+          An AirSensor is a sensor (button, light, gas, thermistor) that encodes a 3‑byte message
+          (<code>[type:1B][value:2B]</code>). It then transmits those 24 bits by repeatedly advertising Find My–compatible BLE frames.
+          Nearby Apple devices opportunistically upload “reports” keyed by the advertised identifier. The gateway asks Apple for reports
+          for a set of candidate IDs and recovers the message by observing which candidates had any reports.
+        </p>
+        <ul>
+          <li><strong>Latency</strong>: minutes to hours.</li>
+          <li><strong>Throughput (observed)</strong>: ~3 bytes/min.</li>
+        </ul>
+
+        <h2>How Find My works</h2>
+        <p>
+          Apple's Find My network uses each BLE advertisement to encode a 28‑byte x‑coordinate (from <code>secp224r1</code>). Apple devices that see it upload
+          encrypted reports keyed by <code>SHA256(pubKeyX)</code> (called a “hashed advertisement key” in my code).
+        </p>
+        <p>
+          That means Apple’s backend behaves like a weird public key/value store:
+          if you query for a particular key ID and any reports exist, you learn a 1‑bit signal: “seen” vs “not seen”.
+          AirSensors turns that into a modem by mapping each payload bit to a pair of candidate key IDs (bit=0 vs bit=1) and checking which one shows up.
         </p>
 
-        <h3 class="mt-6">Sensor Case (Xiao ESP32C3)</h3>
+        <h2>Step 0: prove the plumbing with a normal Find My beacon</h2>
         <p>
-          A compact enclosure designed for the Seeed Studio Xiao ESP32C3 board.
+          Before attempting a modem, I built a baseline that simply broadcasts a valid Find My advertisement continuously. This checks that:
+          BLE payload formatting is correct, Apple devices are nearby, and the backend can fetch reports for an ID.
         </p>
-        <div class="aspect-video bg-black ring-1 ring-white/10 relative overflow-hidden rounded-lg">
-          <iframe
-            src="https://www.viewstl.com/?embedded&url=https%3A%2F%2Fgithub.com%2Ftheotarr%2Fps70%2Fraw%2Frefs%2Fheads%2Fmain%2F13_finalproject%2Fcase.stl&color=white&bgcolor=black&shading=smooth&clean=yes&noborder=yes"
-            allowfullscreen
-            style="border: 0; margin: 0; width: 100%; height: 100%; display: block"
-            loading="lazy"
-            title="Interactive 3D Sensor Case Model"
-          ></iframe>
+        <p>
+          In firmware, that’s <code>findmy/Firmware/ESP32/main/airtag_main.c</code>. Here’s what a healthy boot looks like:
+        </p>
+        <div class="code-editor">
+          <div class="code-editor-header">
+            <div class="code-editor-dots">
+              <span class="code-editor-dot red"></span>
+              <span class="code-editor-dot yellow"></span>
+              <span class="code-editor-dot green"></span>
+            </div>
+            <div class="code-editor-title">boot.log</div>
+            <div class="code-editor-actions">
+              <button type="button" class="code-editor-copy" data-copy="#final-code1">Copy</button>
+            </div>
+          </div>
+          <div class="code-editor-body">
+            <pre><code id="final-code1" class="language-text">I (335) findmy_airtag: === FindMy AirTag Beacon ===
+I (345) findmy_airtag: Initializing...
+I (435) findmy_airtag: Configuring static advertisement payload...
+I (435) findmy_airtag: Advertisement data configured, starting advertising...
+I (435) findmy_airtag: Advertising started successfully!
+I (435) findmy_airtag: MAC Address: F2:EC:A5:F6:79:72
+I (445) findmy_airtag: Payload (first 16 bytes): 1E FF 4C 00 12 19 00 3A D8 9C 76 6A A7 C0 33 BD</code></pre>
+          </div>
         </div>
 
-        <h3 class="mt-6">ESP32 DevKitC V4 Case</h3>
+        <h2>Turning it into a modem: the end-to-end flow</h2>
         <p>
-          A case for the larger Espressif ESP32-DevKitC V4 board used in the ESP32 prototype.
+          Once the static beacon worked, the modem path became “just” an encoding + retrieval problem. End-to-end, it looks like this:
         </p>
-        <div class="aspect-video bg-black ring-1 ring-white/10 relative overflow-hidden rounded-lg">
+        <div class="not-prose my-4 rounded-xl ring-1 ring-white/10 bg-neutral-950/50 p-3 overflow-x-auto">
+          <div class="mermaid">
+sequenceDiagram
+participant AirSensors as AirSensors(ESP32)
+participant AppleDev as AppleDevice
+participant Apple as AppleServer
+participant Gateway as Gateway
+
+AirSensors->>AppleDev: BLE_Adv(FindMy_Format, pubKeyX(bit i))
+AppleDev->>AppleDev: EncryptLocationTo(pubKey)
+AppleDev->>Apple: UploadEncryptedReport(keyHash)
+Gateway->>Apple: FetchReports(ids=[keyHash...])
+Gateway->>Gateway: InferBits + Reconstruct(3B_payload)
+Gateway->>Gateway: DecodeSensorValue
+          </div>
+        </div>
+
+        <h2>Encoding: 3 bytes → 24 bits → 24 advertisements</h2>
+        <p>
+          AirSensors messages are intentionally tiny: one byte for the sensor type, and two bytes for the sensor value (big-endian).
+          The transmitter loops through each bit and “dwells” on that bit long enough to be seen by nearby devices.
+          In code, that’s <code>findmy/Firmware/ESP32/main/openhaystack_main.c</code>:
+        </p>
+        <div class="code-editor">
+          <div class="code-editor-header">
+            <div class="code-editor-dots">
+              <span class="code-editor-dot red"></span>
+              <span class="code-editor-dot yellow"></span>
+              <span class="code-editor-dot green"></span>
+            </div>
+            <div class="code-editor-title">openhaystack_main.c</div>
+            <div class="code-editor-actions">
+              <button type="button" class="code-editor-copy" data-copy="#final-code2">Copy</button>
+            </div>
+          </div>
+          <div class="code-editor-body">
+            <pre><code id="final-code2" class="language-cpp">/* findmy/Firmware/ESP32/main/openhaystack_main.c (excerpt) */
+void send_sensor_data(uint8_t type, uint16_t value, uint32_t msg_id) {
+    uint8_t data[3];
+    data[0] = type;
+    data[1] = (value &gt;&gt; 8) &amp; 0xFF;
+    data[2] = value &amp; 0xFF;
+    // ... loop over bits and advertise each bit ...
+}</code></pre>
+          </div>
+        </div>
+
+        <h3>Bit-to-key encoding: “public key X” as a structured carrier</h3>
+        <p>
+          The Find My advertisement contains a 28-byte x-coordinate. In “normal” Find My, this is a real public key x-coordinate.
+          In modem mode, AirSensors uses that 28-byte slot as a carrier for its own structure: magic bytes, message ID, bit index,
+          and finally the bit value itself.
+        </p>
+        <div class="code-editor">
+          <div class="code-editor-header">
+            <div class="code-editor-dots">
+              <span class="code-editor-dot red"></span>
+              <span class="code-editor-dot yellow"></span>
+              <span class="code-editor-dot green"></span>
+            </div>
+            <div class="code-editor-title">openhaystack_main.c</div>
+            <div class="code-editor-actions">
+              <button type="button" class="code-editor-copy" data-copy="#final-code3">Copy</button>
+            </div>
+          </div>
+          <div class="code-editor-body">
+            <pre><code id="final-code3" class="language-cpp">/* findmy/Firmware/ESP32/main/openhaystack_main.c (excerpt) */
+void set_addr_and_payload_for_bit(uint32_t bit_index, uint32_t msg_id, uint8_t bit) {
+    // Magic bytes
+    public_key[0] = 0xBA;
+    public_key[1] = 0xBE;
+
+    // Bit index, message ID, modem ID
+    copy_4b_big_endian(&amp;public_key[2], bit_index);
+    copy_4b_big_endian(&amp;public_key[6], msg_id);
+    copy_4b_big_endian(&amp;public_key[10], modem_id);
+
+    // Bit value
+    public_key[27] = bit &amp; 0x01;
+
+    // Find valid key counter (see next section)
+    do {
+        copy_4b_big_endian(&amp;public_key[14], valid_key_counter);
+        valid_key_counter++;
+    } while (!is_valid_pubkey(public_key));
+
+    set_addr_from_key(rnd_addr, public_key);
+    set_payload_from_key(adv_data, public_key);
+}</code></pre>
+          </div>
+        </div>
+
+        <h2>The confusing part: why “random” x-coordinates break (curve validity)</h2>
+        <p>
+          The first time I tried the modem, it looked like RF or antenna problems: some bits would appear, others would never show up,
+          and the pattern didn’t make sense. The real culprit is cryptography.
+        </p>
+        <p>
+          Find My treats the 28 bytes as an x-coordinate on <code>secp224r1</code>. Not every x has a corresponding y that satisfies:
+          \(y^2 = x^3 + ax + b \pmod p\). If you broadcast an invalid x-coordinate, you’re effectively advertising nonsense in the
+          “public key” slot — and the report pipeline becomes unreliable.
+        </p>
+        <p>
+          AirSensors fixes this deterministically using a “valid key counter”: keep the message structure stable, but increment a counter field
+          until the resulting x-coordinate corresponds to a valid curve point. Firmware checks validity using micro-ecc:
+        </p>
+        <div class="code-editor">
+          <div class="code-editor-header">
+            <div class="code-editor-dots">
+              <span class="code-editor-dot red"></span>
+              <span class="code-editor-dot yellow"></span>
+              <span class="code-editor-dot green"></span>
+            </div>
+            <div class="code-editor-title">openhaystack_main.c</div>
+            <div class="code-editor-actions">
+              <button type="button" class="code-editor-copy" data-copy="#final-code4">Copy</button>
+            </div>
+          </div>
+          <div class="code-editor-body">
+            <pre><code id="final-code4" class="language-cpp">/* findmy/Firmware/ESP32/main/openhaystack_main.c (excerpt) */
+int is_valid_pubkey(uint8_t *pub_key_compressed) {
+    uint8_t with_sign_byte[29];
+    uint8_t pub_key_uncompressed[128];
+    const struct uECC_Curve_t *curve = uECC_secp224r1();
+
+    with_sign_byte[0] = 0x02;
+    memcpy(&amp;with_sign_byte[1], pub_key_compressed, 28);
+    uECC_decompress(with_sign_byte, pub_key_uncompressed, curve);
+
+    if (!uECC_valid_public_key(pub_key_uncompressed, curve)) {
+        return 0;
+    }
+    return 1;
+}</code></pre>
+          </div>
+        </div>
+        <p>
+          And the backend mirrors the same rule with a Legendre-symbol check (Euler’s criterion) in
+          <code>findmy/app/services/crypto.py</code>, so the gateway can regenerate the exact same candidate IDs:
+        </p>
+        <div class="code-editor">
+          <div class="code-editor-header">
+            <div class="code-editor-dots">
+              <span class="code-editor-dot red"></span>
+              <span class="code-editor-dot yellow"></span>
+              <span class="code-editor-dot green"></span>
+            </div>
+            <div class="code-editor-title">crypto.py</div>
+            <div class="code-editor-actions">
+              <button type="button" class="code-editor-copy" data-copy="#final-code5">Copy</button>
+            </div>
+          </div>
+          <div class="code-editor-body">
+            <pre><code id="final-code5" class="language-python"># findmy/app/services/crypto.py (excerpt)
+def is_valid_public_key_x(x_bytes: bytes) -&gt; bool:
+    x = int.from_bytes(x_bytes, byteorder="big")
+    y_squared = (pow(x, 3, SECP224R1_P) + SECP224R1_A * x + SECP224R1_B) % SECP224R1_P
+    legendre = pow(y_squared, (SECP224R1_P - 1) // 2, SECP224R1_P)
+    return legendre == 1</code></pre>
+          </div>
+        </div>
+
+        <h2>Retrieval: how the gateway reconstructs bits</h2>
+        <p>
+          On the gateway side, reconstruction is “generate candidates, ask Apple, then pack bits.”
+          For each bit index, the gateway generates two candidate key IDs (bit=0, bit=1), queries Apple for all IDs,
+          and marks a bit as found if one of the two candidates returned any reports.
+        </p>
+        <div class="code-editor">
+          <div class="code-editor-header">
+            <div class="code-editor-dots">
+              <span class="code-editor-dot red"></span>
+              <span class="code-editor-dot yellow"></span>
+              <span class="code-editor-dot green"></span>
+            </div>
+            <div class="code-editor-title">crypto.py</div>
+            <div class="code-editor-actions">
+              <button type="button" class="code-editor-copy" data-copy="#final-code6">Copy</button>
+            </div>
+          </div>
+          <div class="code-editor-body">
+            <pre><code id="final-code6" class="language-python"># findmy/app/services/crypto.py (excerpt)
+def generate_key_candidates(modem_id: int, msg_id: int, num_bits: int):
+    candidates = []
+    for bit_index in range(num_bits):
+        for bit_value in (0, 1):
+            public_key, _ = generate_public_key_for_bit(bit_index, msg_id, modem_id, bit_value)
+            hashed_key = public_key_to_hashed_adv_key(public_key)
+            candidates.append((hashed_key, bit_index, bit_value))
+    return candidates</code></pre>
+          </div>
+        </div>
+        <p>
+          Fetching reports is a single POST with a time window and an <code>ids</code> list (see
+          <code>findmy/app/services/apple_api.py</code>):
+        </p>
+        <div class="code-editor">
+          <div class="code-editor-header">
+            <div class="code-editor-dots">
+              <span class="code-editor-dot red"></span>
+              <span class="code-editor-dot yellow"></span>
+              <span class="code-editor-dot green"></span>
+            </div>
+            <div class="code-editor-title">apple_api.py</div>
+            <div class="code-editor-actions">
+              <button type="button" class="code-editor-copy" data-copy="#final-code7">Copy</button>
+            </div>
+          </div>
+          <div class="code-editor-body">
+            <pre><code id="final-code7" class="language-python"># findmy/app/services/apple_api.py (excerpt)
+data = {
+    "search": [
+        {"startDate": start_date * 1000, "endDate": unix_epoch * 1000, "ids": advertisement_keys}
+    ]
+}</code></pre>
+          </div>
+        </div>
+
+        <h2>Hardware</h2>
+        <p>
+          I built AirSensors in two physical phases. First, I used a larger ESP32 DevKit as a bring-up platform (easy serial, easy power),
+          then I moved to a compact XIAO ESP32‑C3 + LiPo build once the modem path worked end-to-end.
+        </p>
+
+        <h3>Phase 1: ESP32 DevKitC case (early prototype)</h3>
+        <p>
+          This enclosure was designed earlier in the class as a fast way to turn a bare DevKit into something you can toss in a bag.
+          It’s a two-piece carrier + lid. I kept the antenna area clear and avoided metal fasteners near it.
+        </p>
+        <ul>
+          <li><a href="../07_outputs/esp32-wroom-32d_carrier.stl" download>esp32-wroom-32d_carrier.stl</a> — bottom carrier</li>
+          <li><a href="../07_outputs/esp32-wroom-32d_cover.stl" download>esp32-wroom-32d_cover.stl</a> — top cover</li>
+        </ul>
+
+        <h4 class="mt-6">ESP32 carrier (interactive)</h4>
+        <div class="aspect-video bg-black ring-1 ring-white/10 relative overflow-hidden rounded-lg not-prose">
           <iframe
             src="https://www.viewstl.com/?embedded&url=https%3A%2F%2Fgithub.com%2Ftheotarr%2Fps70%2Fraw%2Frefs%2Fheads%2Fmain%2F07_outputs%2Fesp32-wroom-32d_carrier.stl&color=white&bgcolor=black&shading=smooth&clean=yes&noborder=yes"
             allowfullscreen
-            style="border: 0; margin: 0; width: 100%; height: 100%; display: block"
+            style="border: 0; margin: 0; width: 100%; height: 100%; display: block; background: #000"
             loading="lazy"
-            title="Interactive 3D ESP32 DevKitC V4 Case Model"
+            title="Interactive 3D — ESP32 DevKit carrier"
           ></iframe>
         </div>
 
-        <h3 class="mt-6">ESP32 DevKitC V4 Lid</h3>
-        <div class="aspect-video bg-black ring-1 ring-white/10 relative overflow-hidden rounded-lg">
+        <h4 class="mt-6">ESP32 cover (interactive)</h4>
+        <div class="aspect-video bg-black ring-1 ring-white/10 relative overflow-hidden rounded-lg not-prose">
           <iframe
             src="https://www.viewstl.com/?embedded&url=https%3A%2F%2Fgithub.com%2Ftheotarr%2Fps70%2Fraw%2Frefs%2Fheads%2Fmain%2F07_outputs%2Fesp32-wroom-32d_cover.stl&color=white&bgcolor=black&shading=smooth&clean=yes&noborder=yes"
             allowfullscreen
-            style="border: 0; margin: 0; width: 100%; height: 100%; display: block"
+            style="border: 0; margin: 0; width: 100%; height: 100%; display: block; background: #000"
             loading="lazy"
-            title="Interactive 3D ESP32 DevKitC V4 Lid Model"
+            title="Interactive 3D — ESP32 DevKit cover"
           ></iframe>
         </div>
 
-        <h3 class="mt-6">Downloadable Files</h3>
-        <p>You can download the original 3D model files here:</p>
-        <ul class="list-disc pl-5">
-          <li><a href="./case.stl" download>case.stl</a> — Case (Xiao ESP32C3)</li>
-          <li><a href="../07_outputs/esp32-wroom-32d_carrier.stl" download>esp32-wroom-32d_carrier.stl</a> — ESP32 DevKitC V4 carrier</li>
-          <li><a href="../07_outputs/esp32-wroom-32d_cover.stl" download>esp32-wroom-32d_cover.stl</a> — ESP32 DevKitC V4 cover</li>
-        </ul>
-
-        <h2>References</h2>
+        <h3>Phase 2: AirSensors case (XIAO ESP32‑C3 + LiPo)</h3>
         <p>
-          FindMyFlipper — app + key generation + report tooling:
-          <a href="https://github.com/MatthewKuKanich/FindMyFlipper" target="_blank" rel="noopener">github.com/MatthewKuKanich/FindMyFlipper</a>
+          Once the software worked, the physical design goals changed: battery volume, press-fit board retention, and sensor placement (especially light).
+          The result is a compact enclosure sized around the XIAO and a small LiPo.
+        </p>
+
+        <figure class="my-6">
+          <img
+            src="./lipo-battery-diagram.png"
+            alt="LiPo battery integration diagram for AirSensors"
+            loading="lazy"
+            class="rounded-xl ring-1 ring-white/10"
+          />
+          <figcaption>LiPo + charging integration for the AirSensors build.</figcaption>
+        </figure>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 not-prose my-6">
+          <figure class="m-0">
+            <img
+              src="./internals.jpeg"
+              alt="AirSensors internals (top view)"
+              loading="lazy"
+              class="rounded-xl ring-1 ring-white/10"
+            />
+            <figcaption class="mt-2 text-sm text-neutral-400">Internals (top view).</figcaption>
+          </figure>
+          <figure class="m-0">
+            <img
+              src="./internals-side.jpeg"
+              alt="AirSensors internals (side view)"
+              loading="lazy"
+              class="rounded-xl ring-1 ring-white/10"
+            />
+            <figcaption class="mt-2 text-sm text-neutral-400">Internals (side view).</figcaption>
+          </figure>
+        </div>
+
+        <p>
+          The enclosure STL is below (interactive), and downloadable:
+        </p>
+        <ul>
+          <li><a href="./case.stl" download>case.stl</a> — AirSensors case (XIAO ESP32‑C3)</li>
+        </ul>
+        <div class="aspect-video bg-black ring-1 ring-white/10 relative overflow-hidden rounded-lg not-prose">
+          <iframe
+            src="https://www.viewstl.com/?embedded&url=https%3A%2F%2Fgithub.com%2Ftheotarr%2Fps70%2Fraw%2Frefs%2Fheads%2Fmain%2F13_finalproject%2Fcase.stl&color=white&bgcolor=black&shading=smooth&clean=yes&noborder=yes"
+            allowfullscreen
+            style="border: 0; margin: 0; width: 100%; height: 100%; display: block; background: #000"
+            loading="lazy"
+            title="Interactive 3D — AirSensors enclosure"
+          ></iframe>
+        </div>
+
+        <h2>Sensor packaging</h2>
+        <p>
+          AirSensors supports multiple sensors, but the wire format stays constant: 3 bytes.
+          This makes the retrieval side simple and makes it feasible to recover a “complete message” under stochastic relay conditions.
+        </p>
+        <figure class="my-6">
+          <img
+            src="./thermistor-internals.png"
+            alt="Thermistor wiring and internals used in an AirSensors build"
+            loading="lazy"
+            class="rounded-xl ring-1 ring-white/10"
+          />
+          <figcaption>Example sensor build: thermistor wiring/internals.</figcaption>
+        </figure>
+
+        <h2>Antenna experiments (and what I learned)</h2>
+        <p>
+          I tested with and without external antenna in an attempt to improve throughput. In practice, the modem bottleneck wasn’t BLE range —
+          it was the Find My relay and report pipeline. The measured throughput stayed roughly ~3 bytes/min in most conditions.
+        </p>
+        <figure class="my-6">
+          <img
+            src="./antenna-testing.jpeg"
+            alt="AirSensors antenna testing setup"
+            loading="lazy"
+            class="rounded-xl ring-1 ring-white/10"
+          />
+          <figcaption>Antenna A/B testing during throughput measurements (photo).</figcaption>
+        </figure>
+
+        <h2>Throughput</h2>
+        <p>
+          There are two different “rates” here: the radio rate (how quickly the ESP32 can cycle through bits) and the network rate
+          (how quickly reports appear at Apple and can be queried).
         </p>
         <p>
-          Positive Security “Send My” — data over Find My analysis + PoC:
-          <a href="https://positive.security/blog/send-my" target="_blank" rel="noopener">positive.security/blog/send-my</a>
+          In my transmitter config (from <code>openhaystack_main.c</code>), each bit is advertised for ~500ms, and messages repeat every 5 seconds.
+          Even with aggressive advertising intervals (100–150ms), the observed throughput was dominated by opportunistic relay and report latency.
+        </p>
+
+        <h2>Debugging checklist (what I used when it didn’t work)</h2>
+        <ul>
+          <li><strong>Static beacon first</strong>: don’t debug the modem until the baseline beacon is producing reports.</li>
+          <li><strong>Magic bytes</strong>: x-coordinate should start with <code>BA BE</code>.</li>
+          <li><strong>IDs match</strong>: confirm <code>modem_id</code> and <code>msg_id</code> match between firmware and gateway.</li>
+          <li><strong>Curve validity</strong>: if a bit “never arrives,” suspect invalid x-coordinates before suspecting RF.</li>
+        </ul>
+
+        <h2>Threat model and defensive framing</h2>
+        <p>
+          AirSensors uses a side‑channel style uplink: the backend leaks a “seen vs not seen” signal when you query for a large set of candidate IDs.
+          The practical constraints (low throughput, high latency) reduce real-world capability — but the existence of the channel is
+          still important. Potential mitigations include server-side rate limits, anomaly detection on bulk ID queries, and tighter binding between
+          device identity and allowed IDs.
+        </p>
+        <h3>Why Apple allows this (or why it’s hard to “just fix”)</h3>
+        <p>
+          The uncomfortable part is that this behavior falls out of Find My’s privacy design. In simplified form:
+        </p>
+        <ul>
+          <li>
+            <strong>Apple can’t know which keys are “yours”</strong>: the backend only sees key IDs (hashes). If Apple could reliably map a key ID back
+            to an owner account, that would undermine the “Apple can’t read locations / can’t enumerate your beacons” property.
+          </li>
+          <li>
+            <strong>Retrieval authorization is intentionally weak</strong>: any authenticated Apple ID can query whether reports exist for an ID. The security
+            boundary is the encryption (only the holder of the private key can decrypt what’s inside the reports).
+          </li>
+          <li>
+            <strong>Signing advertisements is non-trivial</strong>: an “authenticate the BLE frame” fix runs into tight packet budgets, ultra-low-power tags,
+            and rapidly rotating identifiers (plus backwards compatibility with existing Find My accessories).
+          </li>
+          <li>
+            <strong>Rate limiting helps but has tradeoffs</strong>: Apple could rate-limit bulk ID lookups, but that can harm legitimate multi-day searches
+            and can be bypassed by cycling accounts unless the controls get strict.
+          </li>
+        </ul>
+
+        <h2>Appendix: message and key layout</h2>
+        <p><strong>Sensor payload</strong>: 3 bytes: <code>[type:1B][value:2B]</code></p>
+        <p>
+          <strong>Modem x-coordinate layout</strong> (28 bytes):
+          <code>[0..1]=BA BE</code>,
+          <code>[2..5]=bit_index</code>,
+          <code>[6..9]=msg_id</code>,
+          <code>[10..13]=modem_id</code>,
+          <code>[14..17]=valid_key_counter</code>,
+          <code>[18..26]=padding</code>,
+          <code>[27]=bit_value</code>.
         </p>
       </article>
       <nav class="mt-12 flex justify-between text-sm text-neutral-400">
@@ -220,13 +532,67 @@
         <a class="hover:text-white" href="../index.html">Home</a>
       </nav>
     </main>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    ></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <script>
       document.addEventListener('DOMContentLoaded', function () {
         if (window.hljs) {
           hljs.highlightAll();
         }
+        if (window.mermaid) {
+          mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+        }
+        if (window.renderMathInElement) {
+          renderMathInElement(document.body, {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '\\[', right: '\\]', display: true },
+              { left: '$', right: '$', display: false },
+              { left: '\\(', right: '\\)', display: false },
+            ],
+            ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+          });
+        }
+
+        var copyButtons = document.querySelectorAll('.code-editor-copy');
+        copyButtons.forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var targetSelector = btn.getAttribute('data-copy');
+            var codeEl = document.querySelector(targetSelector);
+            if (!codeEl) return;
+            var text = codeEl.innerText;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(text).then(function () {
+                var original = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(function () {
+                  btn.textContent = original;
+                }, 1200);
+              });
+            } else {
+              var textarea = document.createElement('textarea');
+              textarea.value = text;
+              document.body.appendChild(textarea);
+              textarea.select();
+              try {
+                document.execCommand('copy');
+              } catch (e) {}
+              document.body.removeChild(textarea);
+              var original = btn.textContent;
+              btn.textContent = 'Copied!';
+              setTimeout(function () {
+                btn.textContent = original;
+              }, 1200);
+            }
+          });
+        });
       });
     </script>
   </body>
